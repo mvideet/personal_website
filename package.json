@@ -45,7 +45,7 @@
     "gatsby-plugin-sitemap": "^4.0.0",
     "gatsby-plugin-styled-components": "^4.4.0",
     "gatsby-remark-external-links": "0.0.4",
-    "gatsby-remark-images": "4.3.0",
+    "gatsby-remark-images": "^3.1.47",
     "gatsby-remark-prismjs": "^5.1.0",
     "gatsby-source-filesystem": "^3.4.0",
     "gatsby-transformer-remark": "^4.1.0",
@@ -80,8 +80,6 @@
   "resolutions": {
     "minimatch": "^3.1.2",
     "glob": "^7.2.3",
-    "cheerio": "^1.0.0-rc.12",
-    "gatsby-plugin-offline/cheerio": "^1.0.0-rc.12",
-    "gatsby-remark-images/cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12"
   }
 }
