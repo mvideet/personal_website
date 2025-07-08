@@ -1,5 +1,5 @@
 ---
-date: '2016-12-21'
+date: '2025-02-21'
 title: 'Founding Engineer'
 company: 'Hidden Studios'
 location: 'Cambridge, MA'

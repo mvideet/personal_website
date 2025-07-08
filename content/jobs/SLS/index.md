@@ -1,5 +1,5 @@
 ---
-date: '2017-12-21'
+date: '2024-09-21'
 title: 'AI Researcher'
 company: 'MIT CSAIL Spoken Language Systems'
 location: 'Cambridge, MA'

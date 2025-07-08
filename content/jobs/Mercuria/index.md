@@ -1,5 +1,5 @@
 ---
-date: '2018-05-14'
+date: '2025-06-01'
 title: 'AI Research Scientist Intern'
 company: 'Mercuria Energy Trading'
 location: 'Houston, TX'
