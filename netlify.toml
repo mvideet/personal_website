@@ -3,8 +3,9 @@
   publish = "public"
 
 [build.environment]
-  NODE_VERSION = "14.21.3"
+  NODE_VERSION = "20"
   NPM_FLAGS = "--version"
+    YARN_FLAGS = "--production=false"
   YARN_VERSION = "1.22.22"
   NODE_ENV = "production"
 
