@@ -1,16 +1,13 @@
 ---
-date: '1'
-title: 'Build a Spotify Connected App'
-cover: './course-card.png'
-external: 'https://www.newline.co/courses/build-a-spotify-connected-app'
-cta: 'https://www.newline.co/courses/build-a-spotify-connected-app'
+date: '2'
+title: 'Parameter Efficient Fine Tuning in Audio Visual Language Models'
+cover: './demo.png'
+github: 'https://github.com/mvideet/PEFT-mWhisper'
 tech:
-  - React
-  - Express
-  - Spotify API
-  - Styled Components
+  - Pytorch
+  - Python
+  - Distributed Training
+  - OpenAI Whisper
 ---
 
-Having struggled with understanding how the Spotify OAuth flow works, I made the course I wish I could have had.
-
-Unlike tutorials that only cover a few concepts and leave you with half-baked GitHub repositories, this course covers everything from explaining the principles of REST APIs to implementing Spotify's OAuth flow and fetching API data in a React app. By the end of the course, you’ll have an app deployed to the internet you can add to your portfolio.
+This project explores \***\*Parameter-Efficient Fine-Tuning (PEFT)\*\*** strategies for \***\*mWhisper-Flamingo\*\***, a state-of-the-art multilingual audio-visual speech recognition model. With \***\*3B parameters\*\***, the full model requires significant computing resources to fine-tune. We demonstrate that using \***\*LoRA\*\*** with \***\*rank-16\*\*** and tuning only \***\*Query & Value projections\*\*** recovers over \***\*85%\*\*** of noisy-speech performance while training \***\*700x fewer parameters\*\***. Our evaluation compares PEFT techniques like \***\*Linear Adapters\*\***, \***\*LoRA\*\***, and \***\*Soft Prompting\*\***, showing that \***\*LoRA-16 QV\*\*** achieves the optimal balance between parameter efficiency and Word Error Rate performance. This makes fine-tuning large multimodal models more accessible to researchers with limited resources.

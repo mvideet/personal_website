@@ -1,15 +1,16 @@
 ---
-date: '1'
-title: 'Halcyon Theme'
-cover: './halcyon.png'
-github: 'https://github.com/bchiang7/halcyon-site'
-external: 'https://halcyon-theme.netlify.com/'
+date: '4'
+title: 'Reasoning in Diffusion Language Models'
+cover: './demo.png'
+github: 'https://github.com/mvideet/latent_diffusion'
+
 tech:
-  - VS Code
-  - Sublime Text
-  - Atom
-  - iTerm2
-  - Hyper
+  - Pytorch
+  - Distributed Training
+  - LLM Reasoning
+  - SLURM
 ---
 
-A minimal, dark blue theme for VS Code, Sublime Text, Atom, iTerm, and more. Available on [Visual Studio Marketplace](https://marketplace.visualstudio.com/items?itemName=brittanychiang.halcyon-vscode), [Package Control](https://packagecontrol.io/packages/Halcyon%20Theme), [Atom Package Manager](https://atom.io/themes/halcyon-syntax), and [npm](https://www.npmjs.com/package/hyper-halcyon-theme).
+Wanted to learn about diffusion language models and how their internal reasoning mechanism emerges during the diffusion process. Developed mutual information estimation frameworks using multiple estimators (binning, KSG) to track information accumulation patterns and discrete "eureka moments" where models gain sudden insights about correct answers.
+
+Implemented Feature-wise Linear Modulation (FiLM) adapters for latent reasoning injection, enabling fine-grained control over diffusion trajectories by conditioning reasoning representations at each layer.
