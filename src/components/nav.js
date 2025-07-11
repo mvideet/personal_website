@@ -118,12 +118,6 @@ const StyledLinks = styled.div`
       }
     }
   }
-
-  .resume-button {
-    ${({ theme }) => theme.mixins.smallButton};
-    margin-left: 15px;
-    font-size: var(--fz-sm);
-  }
 `;
 
 const Nav = ({ isHome }) => {
@@ -157,12 +151,6 @@ const Nav = ({ isHome }) => {
     </div>
   );
 
-  const resumeLink = (
-    <a className="resume-button" href="/resume.pdf" target="_blank" rel="noopener noreferrer">
-      Resume
-    </a>
-  );
-
   if (prefersReducedMotion) {
     return (
       <StyledHeader scrollDirection={scrollDirection} scrolledToTop={scrolledToTop}>
@@ -176,7 +164,6 @@ const Nav = ({ isHome }) => {
                 </li>
               ))}
             </ol>
-            <div>{resumeLink}</div>
           </StyledLinks>
           <Menu />
         </StyledNav>
@@ -212,11 +199,6 @@ const Nav = ({ isHome }) => {
               </motion.li>
             ))}
           </ol>
-          <motion.div
-            variants={navItemVariants}
-            transition={{ delay: navLinks.length * 0.1 + 0.3 }}>
-            {resumeLink}
-          </motion.div>
         </StyledLinks>
 
         <motion.div variants={navItemVariants}>

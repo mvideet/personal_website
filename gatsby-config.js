@@ -26,7 +26,7 @@ module.exports = {
         background_color: config.colors.darkNavy,
         theme_color: config.colors.navy,
         display: 'minimal-ui',
-        icon: 'src/images/logo.png',
+        icon: 'src/images/favicons/apple-icon.png',
       },
     },
     {
@@ -41,20 +41,6 @@ module.exports = {
       options: {
         name: 'content',
         path: `${__dirname}/content/`,
-      },
-    },
-    {
-      resolve: `gatsby-source-filesystem`,
-      options: {
-        name: `posts`,
-        path: `${__dirname}/content/posts`,
-      },
-    },
-    {
-      resolve: `gatsby-source-filesystem`,
-      options: {
-        name: `projects`,
-        path: `${__dirname}/content/projects`,
       },
     },
     {

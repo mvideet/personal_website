@@ -1,5 +1,5 @@
 ---
-date: '3'
+date: '2024-01-03'
 title: 'Cipher ML'
 cover: './demo.png'
 github: 'https://github.com/mvideet/Cipher'

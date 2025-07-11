@@ -284,7 +284,6 @@ const Featured = () => {
               }
               tech
               github
-              external
             }
             html
           }
@@ -310,7 +309,7 @@ const Featured = () => {
         {featuredProjects &&
           featuredProjects.map(({ node }, i) => {
             const { frontmatter, html } = node;
-            const { external, title, tech, github, cover } = frontmatter;
+            const { title, tech, github, cover } = frontmatter;
             const image = getImage(cover);
 
             return (
@@ -325,7 +324,7 @@ const Featured = () => {
                     <p className="project-overline">Featured Project</p>
 
                     <h3 className="project-title">
-                      <a href={external || github} target="_blank" rel="noopener noreferrer">
+                      <a href={github} target="_blank" rel="noopener noreferrer">
                         {title}
                       </a>
                     </h3>
@@ -353,22 +352,12 @@ const Featured = () => {
                           <Icon name="GitHub" />
                         </a>
                       )}
-                      {external && (
-                        <a
-                          href={external}
-                          aria-label="External Link"
-                          className="external"
-                          target="_blank"
-                          rel="noopener noreferrer">
-                          <Icon name="External" />
-                        </a>
-                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="project-image">
-                  <a href={external || github} target="_blank" rel="noopener noreferrer">
+                  <a href={github} target="_blank" rel="noopener noreferrer">
                     {image && <GatsbyImage image={image} alt={title} className="img" />}
                   </a>
                 </div>

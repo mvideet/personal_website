@@ -1,5 +1,5 @@
 ---
-date: '4'
+date: '2024-01-04'
 title: 'Reasoning in Diffusion Language Models'
 cover: './demo.png'
 github: 'https://github.com/mvideet/latent_diffusion'

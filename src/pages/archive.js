@@ -162,7 +162,6 @@ const ArchivePage = ({ location, data }) => {
               <tr>
                 <th>Year</th>
                 <th>Title</th>
-                <th className="hide-on-mobile">Made at</th>
                 <th className="hide-on-mobile">Built with</th>
                 <th>Link</th>
               </tr>
@@ -170,17 +169,12 @@ const ArchivePage = ({ location, data }) => {
             <tbody>
               {projects.length > 0 &&
                 projects.map(({ node }, i) => {
-                  const { date, github, external, ios, android, title, tech, company } =
-                    node.frontmatter;
+                  const { date, github, title, tech } = node.frontmatter;
                   return (
                     <tr key={i} ref={el => (revealProjects.current[i] = el)}>
                       <td className="overline year">{`${new Date(date).getFullYear()}`}</td>
 
                       <td className="title">{title}</td>
-
-                      <td className="company hide-on-mobile">
-                        {company ? <span>{company}</span> : <span>—</span>}
-                      </td>
 
                       <td className="tech hide-on-mobile">
                         {tech?.length > 0 &&
@@ -195,24 +189,9 @@ const ArchivePage = ({ location, data }) => {
 
                       <td className="links">
                         <div>
-                          {external && (
-                            <a href={external} aria-label="External Link">
-                              <Icon name="External" />
-                            </a>
-                          )}
                           {github && (
                             <a href={github} aria-label="GitHub Link">
                               <Icon name="GitHub" />
-                            </a>
-                          )}
-                          {ios && (
-                            <a href={ios} aria-label="Apple App Store Link">
-                              <Icon name="AppStore" />
-                            </a>
-                          )}
-                          {android && (
-                            <a href={android} aria-label="Google Play Store Link">
-                              <Icon name="PlayStore" />
                             </a>
                           )}
                         </div>
@@ -237,7 +216,7 @@ export default ArchivePage;
 export const pageQuery = graphql`
   {
     allMarkdownRemark(
-      filter: { fileAbsolutePath: { regex: "/content/projects/" } }
+      filter: { fileAbsolutePath: { regex: "/content/featured/" } }
       sort: { fields: [frontmatter___date], order: DESC }
     ) {
       edges {
@@ -247,10 +226,6 @@ export const pageQuery = graphql`
             title
             tech
             github
-            external
-            ios
-            android
-            company
           }
           html
         }
