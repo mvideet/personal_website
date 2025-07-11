@@ -117,7 +117,7 @@ const About = () => {
           transition={{ duration: 0.5, delay: 0.2 }}>
           <div>
             <p>
-              Howdy! My name is Videet Mehta and I'm a student at MIT I'm currently a student at MIT
+              Hi! My name is Videet Mehta and I'm a student at MIT I'm currently a student at MIT
               studying Computer Science. I'm interested in AI research and applied-AI and am looking
               to meet other like-minded people!
             </p>
