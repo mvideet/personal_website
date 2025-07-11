@@ -62,18 +62,13 @@ const StyledPic = styled(motion.div)`
     .img {
       position: relative;
       border-radius: var(--border-radius);
-      mix-blend-mode: multiply;
-      filter: grayscale(100%) contrast(1) brightness(90%);
-      transition: var(--transition);
+      mix-blend-mode: normal;
+      filter: none;
     }
 
     &:hover,
     &:focus {
       outline: 0;
-      .img {
-        filter: none;
-        mix-blend-mode: normal;
-      }
     }
 
     &:after {

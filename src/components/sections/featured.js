@@ -99,14 +99,7 @@ const StyledProject = styled(motion.li)`
 
       &:hover,
       &:focus {
-        background: transparent;
         outline: 0;
-
-        &:before,
-        .img {
-          background: transparent;
-          filter: none;
-        }
       }
 
       &:before {
@@ -120,23 +113,13 @@ const StyledProject = styled(motion.li)`
         bottom: 0;
         background-color: var(--navy);
         mix-blend-mode: screen;
-        transition: var(--transition);
       }
     }
 
     .img {
       border-radius: var(--border-radius);
-      mix-blend-mode: multiply;
-      filter: grayscale(100%) contrast(1) brightness(90%);
-      transition: var(--transition);
-    }
-
-    &:hover,
-    &:focus {
-      .img {
-        filter: none;
-        mix-blend-mode: normal;
-      }
+      mix-blend-mode: normal;
+      filter: none;
     }
   }
 
@@ -190,10 +173,6 @@ const StyledProject = styled(motion.li)`
       padding: 20px 0;
       background-color: transparent;
       box-shadow: none;
-
-      &:hover {
-        box-shadow: none;
-      }
     }
 
     a {
