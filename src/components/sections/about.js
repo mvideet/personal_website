@@ -117,9 +117,9 @@ const About = () => {
           transition={{ duration: 0.5, delay: 0.2 }}>
           <div>
             <p>
-              Hi! My name is Videet Mehta and I'm a student at MIT I'm currently a student at MIT
-              studying Computer Science. I'm interested in AI research and applied-AI and am looking
-              to meet other like-minded people!
+              Hi! My name is Videet Mehta and I'm a student at MIT studying Computer Science. I'm
+              originally from Houston, Texas. I'm interested in AI research and applied-AI in the
+              startup space.
             </p>
 
             <p>
@@ -135,7 +135,7 @@ const About = () => {
               <a href="https://ioai-official.org/the-worlds-best-studios-in-ai-honoured-at-the-first-international-artificial-intelligence-olympiad-in-burgas-bulgaria/">
                 2024 International Olympiad in Artificial Intelligence
               </a>{' '}
-              and won a gold medal!
+              and to have won a gold medal!
             </p>
             <p>Here are a few technologies I've been working with recently:</p>
           </div>

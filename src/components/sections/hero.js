@@ -315,9 +315,10 @@ const Hero = () => {
   const three = <h3 className="big-heading">I love to build AI models & tools</h3>;
   const four = (
     <p>
-      I'm a student at MIT studying Computer Science. I'm currently working on AI research at
-      trading firms, startups, and research labs. I'm interested in AI research and applied-AI and
-      am looking to meet other like-minded people!
+      I'm a student at MIT studying Computer Science. I'm am currently working or have worked
+      previously on AI development at trading firms, startups, and research labs. I'm interested in
+      AI research and applied-AI am always learning about the latest research developments in the
+      field.
     </p>
   );
   const five = (
