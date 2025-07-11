@@ -316,7 +316,7 @@ const Hero = () => {
   const four = (
     <p>
       I'm a student at MIT studying Computer Science. I'm currently working on AI research at
-      trading firms, reserach labs, and startups. I'm interested in AI research and applied-AI and
+      trading firms, startups, and research labs. I'm interested in AI research and applied-AI and
       am looking to meet other like-minded people!
     </p>
   );
