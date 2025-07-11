@@ -6,10 +6,47 @@
 
 const path = require('path');
 
-// No longer creating post or tag pages since posts were removed
-exports.createPages = async () => {
-  // Posts and tags functionality removed since content/posts was deleted
-  // and pensieve pages are commented out
+// Create pages for blog posts
+exports.createPages = async ({ graphql, actions, reporter }) => {
+  const { createPage } = actions;
+
+  // Query for blog posts
+  const result = await graphql(`
+    query {
+      posts: allMarkdownRemark(
+        filter: { fileAbsolutePath: { regex: "/content/blog/" } }
+        sort: { fields: [frontmatter___date], order: DESC }
+      ) {
+        edges {
+          node {
+            frontmatter {
+              slug
+            }
+          }
+        }
+      }
+    }
+  `);
+
+  if (result.errors) {
+    reporter.panicOnBuild(`Error while running GraphQL query.`);
+    return;
+  }
+
+  // Create blog post pages
+  const posts = result.data.posts.edges;
+  const postTemplate = path.resolve('./src/templates/post.js');
+
+  posts.forEach(({ node }) => {
+    const { slug } = node.frontmatter;
+    createPage({
+      path: slug,
+      component: postTemplate,
+      context: {
+        slug: slug,
+      },
+    });
+  });
 };
 
 // https://www.gatsbyjs.org/docs/node-apis/#onCreateWebpackConfig
