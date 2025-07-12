@@ -16,4 +16,71 @@ This blog post will dive into the Xiaomi paper, **Think Silently, Think Fast: Dy
 
 ## Latent Space
 In LLMs, a **latent space** is a continuous, high-dimensional vector space where the model internally represents language and reasoning.
-Each input token $t_i$ is embedded as 
+Each input token $t_i$ is embedded as $
+x_i = \text{Embed}(t_i) \in \mathbb{R}^d,$ and passed through the Transformer layers:
+$h_i=\text{Transformer}(x_i)$ where $h_i \in \mathbb{R}^d$ is a **latent vector**–a dense, contextualized representation of the token. 
+
+
+## Reasoning 
+
+Traditional reasoning methods like CoT and ToT operate by generating **discrete tokens** step by step. For example, in Chain-of-Thought reasoning, given an input prompt $x$, the model generates a reasoning chain:
+
+$$
+y = [y_1, y_2, ..., y_n]
+$$
+
+where each $y_i$ represents a reasoning step in natural language. The final answer is derived from this chain:
+
+$$
+\text{answer} = f(y_n | y_{1:n-1}, x)
+$$
+
+This discrete token generation has some limitations:
+- Each step requires a full forward pass through the model
+- The reasoning is constrained to natural language tokens
+- Long chains can be computationally expensive
+
+## Latent Reasoning
+
+To combat this, we will work on predicting the latent vectors that can encode multiple paths of reasoning simultaneously. 
+- Predict the next latent:
+$$
+z_{i+1} = f(z_i)
+$$
+
+- Model uncertainty as a Gaussian distribution:
+$$
+z \sim \mathcal{N}(\mu, \sigma^2)
+$$
+
+## Supervised Fine Tuning (SFT)
+
+Let $R_L$ be the length of the reasoning length in a traditional CoT reasoning path.
+
+
+We will randomly select a constant $c \sim \mathcal{N}(0,1)$ that will block the reasoning path into blocks into $c$ tokens at a time.
+
+We will run these embedding tokens into an Embedding Compress module. This is a learnable function that takes a group of token embeddings and merges them into a single dense vector.
+
+Given a sequence of $r$ token embeddings from a reasoning chunk:
+$$
+\{h_1, h_2, \dots, h_c\}, \quad h_i \in \mathbb{R}^d,
+$$
+the **Embedding Compress** module produces a single compressed vector:
+$$
+z_1 = \text{Compress}(h_1, \dots, h_c) \in \mathbb{R}^d.
+$$
+
+Given a latent chunk $z_1$, the transformer processes it and produces a hidden state $h_1$, from which the **Latent Head** predicts a distribution over the next latent:
+
+$$
+\begin{aligned}
+h_1 &= \text{Transformer}(e_q, z_1)[\text{position of } z_1] \\
+\mu_2, \sigma_2 &= \text{LatentHead}(h_1) \\
+z_2 &\sim \mathcal{N}(\mu_2, \sigma_2^2)
+\end{aligned}
+$$
+
+## Loss Function
+
+The loss function in SFT is quite sophisticated. It consists of two components: a function that attempts to model actual CoT reasoning steps via the latent states and another that learns to generate next reasoning steps by modelling a Gaussian distribution for each dimension.  
