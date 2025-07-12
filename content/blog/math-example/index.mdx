@@ -6,7 +6,7 @@ slug: '/blog/CoLar'
 tags: ['LLMs', 'reasoning', 'CoT']
 ---
 
-# Background {#background}
+# Background
 
 Chain-of-Thought (CoT), Tree-of-Thought (ToT), Monte-Carlo Tree Search (MCTS) reasoning have well been known to be state-of-the-art reasoning algorithms. These reasoning algorithms perform reasoning at the discrete token level, meaning that they produce discrete tokens to power their reasoning. However, previous research has shown that leaving reasoning chains in the latent space can encode many reasoning paths without having to convert them back to discretized tokens.
 
@@ -14,7 +14,7 @@ Performing reasoning in this much denser latent space will be able to compress r
 
 This blog post will dive into the Xiaomi paper, **Think Silently, Think Fast: Dynamic Latent Compression of LLM Reasoning Chains** by Tan et al.
 
-## Latent Space {#latent-space}
+## Latent Space
 In LLMs, a **latent space** is a continuous, high-dimensional vector space where the model internally represents language and reasoning.
 Each input token $t_i$ is embedded as $x_i = \text{Embed}(t_i) \in \mathbb{R}^d,$ and passed through the Transformer layers:
 $h_i=\text{Transformer}(x_i)$ where $h_i \in \mathbb{R}^d$ is a **latent vector**–a dense, contextualized representation of the token.
