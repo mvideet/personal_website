@@ -1,0 +1,149 @@
+---
+title: 'Understanding Neural Networks Through Mathematics'
+description: 'A deep dive into the mathematical foundations of neural networks with practical examples'
+date: '2024-07-11'
+slug: '/blog/my-math-post'
+tags: ['machine-learning', 'mathematics', 'neural-networks']
+---
+
+# Understanding Neural Networks Through Mathematics
+
+Neural networks are fundamentally mathematical constructs. In this post, we'll explore the key mathematical concepts that make neural networks work.
+
+## The Basics: Linear Transformation
+
+At its core, a neural network layer performs a linear transformation followed by a non-linear activation. For a single neuron:
+
+$$
+z = \mathbf{w}^T \mathbf{x} + b
+$$
+
+Where:
+- $\mathbf{w}$ is the weight vector
+- $\mathbf{x}$ is the input vector  
+- $b$ is the bias term
+- $z$ is the pre-activation output
+
+## Activation Functions
+
+### Sigmoid Function
+
+The sigmoid function maps any real number to a value between 0 and 1:
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$
+
+Its derivative is particularly elegant:
+
+$$
+\frac{d\sigma}{dz} = \sigma(z)(1 - \sigma(z))
+$$
+
+### ReLU (Rectified Linear Unit)
+
+The ReLU function is defined as:
+
+$$
+\text{ReLU}(z) = \max(0, z) = \begin{cases}
+z & \text{if } z > 0 \\
+0 & \text{if } z \leq 0
+\end{cases}
+$$
+
+## Forward Propagation
+
+For a multi-layer network, forward propagation can be expressed as:
+
+$$
+\mathbf{a}^{(l)} = f^{(l)}(\mathbf{W}^{(l)} \mathbf{a}^{(l-1)} + \mathbf{b}^{(l)})
+$$
+
+Where:
+- $\mathbf{a}^{(l)}$ is the activation of layer $l$
+- $\mathbf{W}^{(l)}$ is the weight matrix for layer $l$
+- $\mathbf{b}^{(l)}$ is the bias vector for layer $l$
+- $f^{(l)}$ is the activation function for layer $l$
+
+## Loss Functions
+
+### Mean Squared Error
+
+For regression tasks, we often use MSE:
+
+$$
+\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$
+
+### Cross-Entropy Loss
+
+For classification, cross-entropy is common:
+
+$$
+\text{CE} = -\sum_{i=1}^{C} y_i \log(\hat{y}_i)
+$$
+
+## Backpropagation
+
+The heart of neural network training is backpropagation, which uses the chain rule:
+
+$$
+\frac{\partial L}{\partial w_{ij}^{(l)}} = \frac{\partial L}{\partial z_j^{(l)}} \frac{\partial z_j^{(l)}}{\partial w_{ij}^{(l)}}
+$$
+
+The gradient of the loss with respect to the pre-activation is:
+
+$$
+\delta_j^{(l)} = \frac{\partial L}{\partial z_j^{(l)}}
+$$
+
+And the weight update rule becomes:
+
+$$
+w_{ij}^{(l)} \leftarrow w_{ij}^{(l)} - \alpha \frac{\partial L}{\partial w_{ij}^{(l)}}
+$$
+
+Where $\alpha$ is the learning rate.
+
+## Gradient Descent Optimization
+
+The basic gradient descent update rule:
+
+$$
+\theta_{t+1} = \theta_t - \alpha \nabla_\theta L(\theta_t)
+$$
+
+### Momentum
+
+Adding momentum helps with convergence:
+
+$$
+\begin{aligned}
+v_{t+1} &= \beta v_t + \alpha \nabla_\theta L(\theta_t) \\
+\theta_{t+1} &= \theta_t - v_{t+1}
+\end{aligned}
+$$
+
+### Adam Optimizer
+
+The Adam optimizer combines momentum with adaptive learning rates:
+
+$$
+\begin{aligned}
+m_t &= \beta_1 m_{t-1} + (1 - \beta_1) \nabla_\theta L(\theta_t) \\
+v_t &= \beta_2 v_{t-1} + (1 - \beta_2) (\nabla_\theta L(\theta_t))^2 \\
+\hat{m}_t &= \frac{m_t}{1 - \beta_1^t} \\
+\hat{v}_t &= \frac{v_t}{1 - \beta_2^t} \\
+\theta_{t+1} &= \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t
+\end{aligned}
+$$
+
+## Conclusion
+
+Understanding the mathematics behind neural networks gives us deeper insight into how they work and how to improve them. These equations form the foundation for more advanced architectures like transformers, CNNs, and RNNs.
+
+The beauty of neural networks lies in how these simple mathematical operations, when composed together, can learn incredibly complex patterns and representations.
+
+---
+
+*Next time, we'll explore how these concepts apply to specific architectures like transformers and attention mechanisms!* 

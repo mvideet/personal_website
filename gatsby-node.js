@@ -6,14 +6,36 @@
 
 const path = require('path');
 
+// Schema customization
+exports.createSchemaCustomization = ({ actions }) => {
+  const { createTypes } = actions;
+
+  const typeDefs = `
+    type MarkdownRemark implements Node {
+      frontmatter: Frontmatter
+    }
+    type Mdx implements Node {
+      frontmatter: Frontmatter
+    }
+    type Frontmatter {
+      title: String
+      description: String
+      date: Date @dateformat
+      tags: [String]
+      slug: String
+    }
+  `;
+  createTypes(typeDefs);
+};
+
 // Create pages for blog posts
 exports.createPages = async ({ graphql, actions, reporter }) => {
   const { createPage } = actions;
 
-  // Query for blog posts
+  // Query for MDX blog posts
   const result = await graphql(`
     query {
-      posts: allMarkdownRemark(
+      posts: allMdx(
         filter: { fileAbsolutePath: { regex: "/content/blog/" } }
         sort: { fields: [frontmatter___date], order: DESC }
       ) {
@@ -33,15 +55,15 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
     return;
   }
 
-  // Create blog post pages
+  // Create blog post pages for MDX files
   const posts = result.data.posts.edges;
-  const postTemplate = path.resolve('./src/templates/post.js');
+  const mdxPostTemplate = path.resolve('./src/templates/mdx-post.js');
 
   posts.forEach(({ node }) => {
     const { slug } = node.frontmatter;
     createPage({
       path: slug,
-      component: postTemplate,
+      component: mdxPostTemplate,
       context: {
         slug: slug,
       },

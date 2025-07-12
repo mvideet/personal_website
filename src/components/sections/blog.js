@@ -145,16 +145,16 @@ const StyledPost = styled(motion.li)`
 const Blog = () => {
   const data = useStaticQuery(graphql`
     query {
-      posts: allMarkdownRemark(
+      posts: allMdx(
         filter: { fileAbsolutePath: { regex: "/content/blog/" } }
         sort: { fields: [frontmatter___date], order: DESC }
         limit: 3
       ) {
         edges {
           node {
-            excerpt(pruneLength: 120)
             frontmatter {
               title
+              description
               date
               tags
               slug
@@ -179,11 +179,15 @@ const Blog = () => {
       <StyledPostsGrid>
         {posts.length > 0 &&
           posts.map(({ node }, i) => {
-            const { frontmatter, excerpt } = node;
-            const { title, date, tags, slug } = frontmatter;
+            const { frontmatter } = node;
+            const { title, description, date, tags, slug } = frontmatter;
 
             return (
-              <StyledPost key={i}>
+              <StyledPost
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: i * 0.1 }}>
                 <div className="post-inner">
                   <header>
                     <div className="post-top">
@@ -205,9 +209,9 @@ const Blog = () => {
                     <h3 className="post-title">
                       <Link to={slug}>{title}</Link>
                     </h3>
-
-                    <div className="post-desc">{excerpt}</div>
                   </header>
+
+                  <div className="post-desc">{description}</div>
 
                   <footer>
                     <p className="post-date">

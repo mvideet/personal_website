@@ -156,7 +156,7 @@ const StyledPost = styled.li`
 `;
 
 const BlogPage = ({ location, data }) => {
-  const posts = data.allMarkdownRemark.edges;
+  const posts = data.allMdx.edges;
 
   return (
     <Layout location={location}>
@@ -171,9 +171,8 @@ const BlogPage = ({ location, data }) => {
         <StyledGrid>
           {posts.length > 0 &&
             posts.map(({ node }, i) => {
-              const { frontmatter, excerpt } = node;
-              const { title, date, tags, slug } = frontmatter;
-
+              const { frontmatter } = node;
+              const { title, description, slug, date, tags } = frontmatter;
               return (
                 <StyledPost key={i}>
                   <div className="post-inner">
@@ -198,7 +197,7 @@ const BlogPage = ({ location, data }) => {
                         <Link to={slug}>{title}</Link>
                       </h3>
 
-                      <div className="post-desc">{excerpt}</div>
+                      <div className="post-desc">{description}</div>
                     </header>
 
                     <footer>
@@ -236,15 +235,15 @@ export default BlogPage;
 
 export const pageQuery = graphql`
   query {
-    allMarkdownRemark(
+    allMdx(
       filter: { fileAbsolutePath: { regex: "/content/blog/" } }
       sort: { fields: [frontmatter___date], order: DESC }
     ) {
       edges {
         node {
-          excerpt(pruneLength: 200)
           frontmatter {
             title
+            description
             date
             tags
             slug

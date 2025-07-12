@@ -1,3 +1,5 @@
+import 'katex/dist/katex.min.css';
+
 /**
  * Implement Gatsby's Browser APIs in this file.
  *

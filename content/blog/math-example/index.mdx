@@ -1,0 +1,112 @@
+---
+title: 'Compression of Language Reasoning Chains'
+description: 'A demonstration of mathematical equation rendering in blog posts'
+date: '2024-07-11'
+slug: '/blog/math-example'
+tags: ['math', 'katex', 'demo']
+---
+
+# Background
+
+Chain-of-Thought(CoT), Tree-of-Thought(ToT), Monte-Carlo Tree Search (MCTS) reasoning have well been known to be state-of-the-art reasoning algorithms. These reasoning algorithms perform reasoning at the discrete token level, meaning that they produce discrete tokens to power their reasoning. However, previous research has shown that the leaving reasoning chains in the latent space can encode many reasoning paths without having to convert it back to discretized tokens. 
+
+Performing reasoning at this much denser latent space will be able to compress reasoning chains while preserving the exploration & exploitation of traditional reasoning methods.
+
+This blog post will dive into the Xiaomi paper, **Think Silently, Think Fast: Dynamic Latent Compression of LLM Reasoning Chains** by Tan et. al. 
+
+## Latent Space
+In LLMs, a **latent space** is a continuous, high-dimensional vector space where the model internally represents language and reasoning.
+Each input token $t_i$ is embedded as 
+
+## Block Math Equations
+
+For larger equations, use double dollar signs to create centered display equations:
+
+$$
+\int_{-\infty}^{\infty} e^{-x^2} dx = \sqrt{\pi}
+$$
+
+## Complex Mathematical Notation
+
+### Maxwell's Equations
+
+$$
+\begin{aligned}
+\nabla \times \vec{\mathbf{B}} -\, \frac1c\, \frac{\partial\vec{\mathbf{E}}}{\partial t} &= \frac{4\pi}{c}\vec{\mathbf{j}} \\
+\nabla \cdot \vec{\mathbf{E}} &= 4 \pi \rho \\
+\nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} &= \vec{\mathbf{0}} \\
+\nabla \cdot \vec{\mathbf{B}} &= 0
+\end{aligned}
+$$
+
+### Matrix Operations
+
+$$
+\begin{pmatrix}
+a & b \\
+c & d
+\end{pmatrix}
+\begin{pmatrix}
+x \\
+y
+\end{pmatrix}
+=
+\begin{pmatrix}
+ax + by \\
+cx + dy
+\end{pmatrix}
+$$
+
+### Machine Learning Equations
+
+The softmax function used in neural networks:
+
+$$
+\text{softmax}(x_i) = \frac{e^{x_i}}{\sum_{j=1}^{K} e^{x_j}}
+$$
+
+The cross-entropy loss function:
+
+$$
+L = -\sum_{i=1}^{N} y_i \log(\hat{y}_i)
+$$
+
+## Statistics and Probability
+
+### Normal Distribution
+
+$$
+f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}
+$$
+
+### Bayes' Theorem
+
+$$
+P(A|B) = \frac{P(B|A) \cdot P(A)}{P(B)}
+$$
+
+## Fractions and Complex Expressions
+
+$$
+\frac{d}{dx}\left[ \int_{a}^{x} f(t) dt \right] = f(x)
+$$
+
+$$
+\lim_{n \to \infty} \left(1 + \frac{1}{n}\right)^n = e
+$$
+
+## Conclusion
+
+With KaTeX support, you can now include beautiful mathematical equations in your blog posts! This is particularly useful for posts about:
+
+- Machine Learning and AI research
+- Mathematics and statistics
+- Physics and engineering
+- Data science and analytics
+- Algorithm analysis
+
+The equations render quickly and look professional, making your technical blog posts much more readable and engaging.
+
+---
+
+*Try creating your own math-heavy blog posts using the syntax shown above!* 
