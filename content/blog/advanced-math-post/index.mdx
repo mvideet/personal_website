@@ -1,204 +1,144 @@
 ---
-title: 'Advanced Mathematical Concepts in Machine Learning'
-description: 'Exploring advanced mathematical concepts with interactive examples and beautiful equations'
-date: '2024-07-11'
-slug: '/blog/advanced-math-post'
-tags: ['machine-learning', 'mathematics', 'advanced', 'calculus']
+title: 'Understanding Neural Networks Through Mathematics'
+description: 'A deep dive into the mathematical foundations of neural networks with practical examples'
+date: '2025-07-11'
+slug: '/blog/my-math-post'
+tags: ['machine-learning', 'mathematics', 'neural-networks']
 ---
 
-# Advanced Mathematical Concepts in Machine Learning
+# Understanding Neural Networks Through Mathematics
 
-This post explores some of the more advanced mathematical concepts that power modern machine learning algorithms.
+Neural networks are fundamentally mathematical constructs. In this post, we'll explore the key mathematical concepts that make neural networks work.
 
-## Calculus of Variations
+## The Basics: Linear Transformation
 
-In machine learning, we often need to optimize functionals (functions of functions). The Euler-Lagrange equation is fundamental:
-
-$$
-\frac{\partial L}{\partial f} - \frac{d}{dx}\frac{\partial L}{\partial f'} = 0
-$$
-
-Where $L(x, f, f')$ is the Lagrangian and $f'$ is the derivative of $f$.
-
-## Information Theory
-
-### Entropy
-
-The entropy of a discrete random variable $X$ is:
+At its core, a neural network layer performs a linear transformation followed by a non-linear activation. For a single neuron:
 
 $$
-H(X) = -\sum_{i=1}^{n} P(x_i) \log P(x_i)
+z = \mathbf{w}^T \mathbf{x} + b
 $$
 
-### Kullback-Leibler Divergence
+Where:
+- $\mathbf{w}$ is the weight vector
+- $\mathbf{x}$ is the input vector  
+- $b$ is the bias term
+- $z$ is the pre-activation output
 
-The KL divergence measures how one probability distribution differs from another:
+## Activation Functions
 
-$$
-D_{KL}(P \parallel Q) = \sum_{i} P(i) \log \frac{P(i)}{Q(i)}
-$$
+### Sigmoid Function
 
-## Advanced Optimization
-
-### Lagrange Multipliers
-
-For constrained optimization problems, we use Lagrange multipliers:
+The sigmoid function maps any real number to a value between 0 and 1:
 
 $$
-\mathcal{L}(x, \lambda) = f(x) + \lambda g(x)
+\sigma(z) = \frac{1}{1 + e^{-z}}
 $$
 
-The optimal solution satisfies:
+Its derivative is particularly elegant:
+
+$$
+\frac{d\sigma}{dz} = \sigma(z)(1 - \sigma(z))
+$$
+
+### ReLU (Rectified Linear Unit)
+
+The ReLU function is defined as:
+
+$$
+\text{ReLU}(z) = \max(0, z) = \begin{cases}
+z & \text{if } z > 0 \\
+0 & \text{if } z \leq 0
+\end{cases}
+$$
+
+## Forward Propagation
+
+For a multi-layer network, forward propagation can be expressed as:
+
+$$
+\mathbf{a}^{(l)} = f^{(l)}(\mathbf{W}^{(l)} \mathbf{a}^{(l-1)} + \mathbf{b}^{(l)})
+$$
+
+Where:
+- $\mathbf{a}^{(l)}$ is the activation of layer $l$
+- $\mathbf{W}^{(l)}$ is the weight matrix for layer $l$
+- $\mathbf{b}^{(l)}$ is the bias vector for layer $l$
+- $f^{(l)}$ is the activation function for layer $l$
+
+## Loss Functions
+
+### Mean Squared Error
+
+For regression tasks, we often use MSE:
+
+$$
+\text{MSE} = \frac{1}{n} \sum_{i=1}^{n} (y_i - \hat{y}_i)^2
+$$
+
+### Cross-Entropy Loss
+
+For classification, cross-entropy is common:
+
+$$
+\text{CE} = -\sum_{i=1}^{C} y_i \log(\hat{y}_i)
+$$
+
+## Backpropagation
+
+The heart of neural network training is backpropagation, which uses the chain rule:
+
+$$
+\frac{\partial L}{\partial w_{ij}^{(l)}} = \frac{\partial L}{\partial z_j^{(l)}} \frac{\partial z_j^{(l)}}{\partial w_{ij}^{(l)}}
+$$
+
+The gradient of the loss with respect to the pre-activation is:
+
+$$
+\delta_j^{(l)} = \frac{\partial L}{\partial z_j^{(l)}}
+$$
+
+And the weight update rule becomes:
+
+$$
+w_{ij}^{(l)} \leftarrow w_{ij}^{(l)} - \alpha \frac{\partial L}{\partial w_{ij}^{(l)}}
+$$
+
+Where $\alpha$ is the learning rate.
+
+## Gradient Descent Optimization
+
+The basic gradient descent update rule:
+
+$$
+\theta_{t+1} = \theta_t - \alpha \nabla_\theta L(\theta_t)
+$$
+
+### Momentum
+
+Adding momentum helps with convergence:
 
 $$
 \begin{aligned}
-\nabla_x \mathcal{L} &= \nabla f(x) + \lambda \nabla g(x) = 0 \\
-\frac{\partial \mathcal{L}}{\partial \lambda} &= g(x) = 0
+v_{t+1} &= \beta v_t + \alpha \nabla_\theta L(\theta_t) \\
+\theta_{t+1} &= \theta_t - v_{t+1}
 \end{aligned}
 $$
 
-## Matrix Calculus
+### Adam Optimizer
 
-### Gradient of Quadratic Form
-
-For the quadratic form $f(x) = x^T A x$:
+The Adam optimizer combines momentum with adaptive learning rates:
 
 $$
-\nabla_x f(x) = (A + A^T)x
-$$
-
-If $A$ is symmetric, then:
-
-$$
-\nabla_x f(x) = 2Ax
-$$
-
-### Gradient of Matrix Trace
-
-$$
-\frac{\partial}{\partial A} \text{tr}(AB) = B^T
-$$
-
-$$
-\frac{\partial}{\partial A} \text{tr}(A^T B) = B
-$$
-
-## Probability Theory
-
-### Multivariate Gaussian Distribution
-
-The probability density function for a multivariate Gaussian:
-
-$$
-f(x) = \frac{1}{(2\pi)^{k/2}|\Sigma|^{1/2}} \exp\left(-\frac{1}{2}(x-\mu)^T\Sigma^{-1}(x-\mu)\right)
-$$
-
-Where:
-- $k$ is the dimensionality
-- $\mu$ is the mean vector
-- $\Sigma$ is the covariance matrix
-
-### Bayes' Rule (Continuous Case)
-
-$$
-p(\theta|x) = \frac{p(x|\theta)p(\theta)}{p(x)}
-$$
-
-Where:
-- $p(\theta|x)$ is the posterior
-- $p(x|\theta)$ is the likelihood
-- $p(\theta)$ is the prior
-- $p(x)$ is the evidence
-
-## Fourier Analysis
-
-### Fourier Transform
-
-The continuous Fourier transform:
-
-$$
-\hat{f}(\omega) = \int_{-\infty}^{\infty} f(t) e^{-2\pi i \omega t} dt
-$$
-
-### Discrete Fourier Transform
-
-For digital signals:
-
-$$
-X_k = \sum_{n=0}^{N-1} x_n e^{-2\pi i k n / N}
-$$
-
-## Spectral Graph Theory
-
-### Graph Laplacian
-
-For a graph with adjacency matrix $A$ and degree matrix $D$:
-
-$$
-L = D - A
-$$
-
-The normalized Laplacian is:
-
-$$
-\mathcal{L} = D^{-1/2} L D^{-1/2}
-$$
-
-### Spectral Clustering
-
-The eigenvalues and eigenvectors of the Laplacian reveal clustering structure:
-
-$$
-\mathcal{L} v = \lambda v
-$$
-
-## Differential Geometry
-
-### Riemannian Manifolds
-
-On a Riemannian manifold, the metric tensor $g$ defines distances:
-
-$$
-ds^2 = g_{ij} dx^i dx^j
-$$
-
-### Geodesics
-
-Geodesics are curves that minimize distance, satisfying:
-
-$$
-\frac{d^2 x^k}{dt^2} + \Gamma^k_{ij} \frac{dx^i}{dt} \frac{dx^j}{dt} = 0
-$$
-
-Where $\Gamma^k_{ij}$ are the Christoffel symbols.
-
-## Variational Inference
-
-### Evidence Lower Bound (ELBO)
-
-In variational inference, we maximize the ELBO:
-
-$$
-\text{ELBO} = \mathbb{E}_{q(z)}[\log p(x,z)] - \mathbb{E}_{q(z)}[\log q(z)]
-$$
-
-This can be rewritten as:
-
-$$
-\text{ELBO} = \mathbb{E}_{q(z)}[\log p(x|z)] - D_{KL}(q(z) \parallel p(z))
+\begin{aligned}
+m_t &= \beta_1 m_{t-1} + (1 - \beta_1) \nabla_\theta L(\theta_t) \\
+v_t &= \beta_2 v_{t-1} + (1 - \beta_2) (\nabla_\theta L(\theta_t))^2 \\
+\hat{m}_t &= \frac{m_t}{1 - \beta_1^t} \\
+\hat{v}_t &= \frac{v_t}{1 - \beta_2^t} \\
+\theta_{t+1} &= \theta_t - \frac{\alpha}{\sqrt{\hat{v}_t} + \epsilon} \hat{m}_t
+\end{aligned}
 $$
 
 ## Conclusion
 
-These advanced mathematical concepts form the theoretical foundation for cutting-edge machine learning algorithms. Understanding them deeply enables us to:
-
-1. Develop new algorithms with solid theoretical grounding
-2. Debug and improve existing methods
-3. Understand the limitations and assumptions of current approaches
-4. Bridge the gap between theory and practice
-
-The mathematics of machine learning is vast and beautiful, connecting ideas from analysis, algebra, geometry, and probability theory.
-
+Understanding the mathematics behind neural networks gives us deeper insight into how they work and how to improve them. These equations form the foundation for more advanced architectures like transformers, CNNs, and RNNs.
 ---
-
-*In future posts, we'll explore how these concepts apply to specific algorithms like VAEs, GANs, and attention mechanisms.* 
