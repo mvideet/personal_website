@@ -125,9 +125,9 @@ const About = () => {
             <p>
               Fast-forward to today, and I've had the privilege of working at{' '}
               <a href="https://mercuria.com/">a commodities trading firm</a>,{' '}
-              <a href="https://www.hiddenstudios.gg/">a gaming start-up</a>,{' '}
               <a href="https://www.sarvam.ai/">an AI industry research lab</a>, and{' '}
-              <a href="https://sls.csail.mit.edu/">an MIT NLP lab</a>.
+              <a href="https://www.hiddenstudios.gg/">a gaming start-up</a>,{' '}
+              <a href="https://sls.csail.mit.edu/">an MIT NLP lab</a>
             </p>
 
             <p>

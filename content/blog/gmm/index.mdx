@@ -1,0 +1,114 @@
+---
+title: 'Gaussian Mixture Models'
+description: 'Understanding Gaussian Mixture Models, a statistical machine learning model'
+date: '2025-07-14'
+slug: '/blog/gmm'
+tags: ['machine-learning', 'mathematics', 'statistical models']
+---
+
+## Introduction
+
+**Gaussian Mixture Models (GMMs)** are a powerful probabilistic approach for modeling data that is believed to be generated from several **Gaussian distributions**.
+
+Simple clustering like **K-means** assigns each data-point to a cluster, meanwhile **GMM** represent data-point as a mixture of multiple Gaussian distributions, allowing for **soft assignments** based on probabilities. This allows GMMs to be useful where cluster boundaries aren't clearly defined or if the data is very noisy.
+
+GMMs assume that the distribution of data is a **weighted sum** of several Gaussian distributions. We don't know which Gaussian distributions each data-point came from, so we want to estimate the parameters of each of the Gaussian in the data distribution. These models are used heavily in **speech recognition**, **image segmentation**, **anomaly detection**, and **density estimation**.
+
+
+
+```python 
+#How to initialize a GMM in Python with the GMM library from sk-learn
+gmm = GaussianMixture(n_components=3, covariance_type='full', random_state=0)
+gmm.fit(X)
+```
+
+## Notation
+
+$K$:  number of Gaussians
+
+$x \in {R}^{d}$: our data
+
+$\pi_{k}$: mixing coefficient where $\sum_{k=1}^K \pi_k = 1$
+
+$\mu_k \in \mathbb{R}^d$: mean of the $k$th Gaussian
+
+$\Sigma_k \in \mathbb{R}^{d \times d}$: covariance matrix of the $k$th Gaussian
+
+$p(x) = \sum_{k=1}^K \pi_{k} * \mathcal{N}(x;\mu_k, \Sigma_k)$
+
+where $\mathcal{N}(x; \mu_k, \Sigma_k)$ is a normal distribution with the following formulation:
+$$
+\mathcal{N}(x|\mu_k,\Sigma_k) = \frac{1}{(2\pi)^{d/2}|\Sigma_k|^{1/2}} \exp\left(-\frac{1}{2}(x-\mu_k)^T\Sigma_k^{-1}(x-\mu_k)\right)
+$$
+
+** Let's break down this distribution formula to understand what is going on**
+
+- $|\Sigma_K|$ is the determinant of the covariance matrix.
+- $(2\pi)^{d/2} |\Sigma_k|^{1/2}$ is our normalization constant to make sure the probability function integrates to 1. 
+- The exponential term has the inverse of the covariance matrix $\Sigma_k^{-1}$ to account for feature correlation and scaling
+- $(x-\mu_k)^T(x-\mu_k)$ gives us the squared distance from $x$ to the mean $\mu_k$
+
+*Overall, this tells us how far x is from $\mu_k$, taking into account the shape, orientation, and correlations of the $K$ distributions.*
+
+
+## Expectation Maximization (EM) algorithm. 
+
+Now to find the parameters of each of these $K$ Gaussians, we will introduce a new parameter $\gamma_{ik}$ which represents the probability that data point $x_i$ belongs to Gaussian $k$.
+
+
+### E-step
+
+**Goal: For each point $x_i$, calculate how "responsible" each Gaussian is for it**
+To find $\gamma_{ik}$, we do:
+$$
+\gamma_{ik} = \frac{\pi_k \mathcal{N}(x_i|\mu_k,\Sigma_k)}{\sum_{j=1}^K \pi_j \mathcal{N}(x_i|\mu_j,\Sigma_j)}
+$$
+
+We are saying, "Given this point, how likely is it that it came from each of the $K$ Gaussians?"
+
+>I got confused between $\pi_k$ and $\gamma{ik}$, so the difference is that $\pi_k$ gives us the **overall proportion (a prior)** of the dataset expected to belong to cluster $k$. Meanwhile, **$\gamma_{ik}$** tells us the **conditional probability** that data point $x_i$ comes from cluster $k$.
+
+
+### M-step
+
+Now, we update the parameters of the Gaussians based on these calculated responsibilities.
+
+First, we update the mixing coefficients by making it the expected proportion of data points belonging to component $k$.
+$$
+\pi_k = \frac{1}{N} \sum_{i=1}^N \gamma_{ik}
+$$
+ 
+Then, we update $\mu_k$ via weighted average of datapoints that were assigned to $k$ pulls the mean towards their own mean.
+$$
+\mu_k = \frac{\sum_{i=1}^N \gamma_{ik} x_i}{\sum_{i=1}^N \gamma_{ik}}
+$$
+​	
+Finally, we update the covariances which helps us see how points vary around the mean of component $k$.
+$$
+\Sigma_k = \frac{\sum_{i=1}^N \gamma_{ik} (x_i - \mu_k)(x_i - \mu_k)^T}{\sum_{i=1}^N \gamma_{ik}}
+$$
+- $\gamma_{ik}$ gives us the responsibility of how much component $k$ "owns" data point $x_i$
+- $(x_i-\mu_k)(x_i-\mu_k)^T$ is the outer product matrix that captures how the point deviates from the mean in every pair of dimensions.
+- The numerator computes a weighted sum of these deviation matrices across all points
+- The denominator normalizes by the effective number of points assigned to component $k$
+​	
+## Convergence
+We continue this EM-cycle until, 
+
+We continue until the log-likelihood converges, where the log-likelihood is:
+
+$$
+\log p(X) = \sum_{i=1}^N \log\left(\sum_{k=1}^K \pi_k \mathcal{N}(x_i|\mu_k,\Sigma_k)\right)
+$$
+
+Specifically, we check if the change in log-likelihood between iterations is small:
+
+$$
+\log p^{(t)}(X) - \log p^{(t-1)}(X) < \epsilon
+$$
+
+where $p^{(t)}(X)$ is the likelihood at iteration $t$ and $\epsilon$ is a small threshold.
+
+The log-likelihood measures how well our mixture model explains the data. Since EM is guaranteed to increase (or maintain) the likelihood at each step, we continue until we reach a local maximum where further iterations yield negligible improvement.
+
+> We can't guarantee a loss-surface that only has one minima. Thus, GMM might not always produce the most optimal solution and sometimes converge early in a local minima. That's why it is standard practice to run GMM several tiems and then pick the best log-likelihood. 

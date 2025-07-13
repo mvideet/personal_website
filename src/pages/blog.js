@@ -165,7 +165,7 @@ const BlogPage = ({ location, data }) => {
       <StyledMainContainer>
         <header>
           <StyledTitle>Blog</StyledTitle>
-          <StyledSubtitle>A collection of thoughts, ideas, and learnings</StyledSubtitle>
+          <StyledSubtitle>Reviews and Summaries of AI Research and Concepts</StyledSubtitle>
         </header>
 
         <StyledGrid>
