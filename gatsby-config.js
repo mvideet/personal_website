@@ -6,7 +6,7 @@ module.exports = {
     description:
       'Videet Mehta is a student at Massachusetts Institute of Technology studying Computer Science and interested in NLP and LLMs',
     siteUrl: 'https://videetmehta.com', // No trailing slash allowed!
-    image: '/og.png', // Path to your image you placed in the 'static' folder
+    image: '/home_og.png', // Path to your image you placed in the 'static' folder
     twitterUsername: '@mvideet',
   },
   plugins: [
