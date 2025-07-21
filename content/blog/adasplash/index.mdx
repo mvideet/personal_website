@@ -1,0 +1,255 @@
+---
+title: 'Understanding Adaptive Sparse Flash Attention'
+description: 'Attempting to beat traditional Flash-attention with sparse-attention optimizations'
+date: '2025-07-20'
+slug: '/blog/adasplash'
+tags: ['transformers', 'gpu-optimizations', 'low-level']
+---
+This blog post explores Adaptive Sparse Flash Attention (AdaSplash), an optimization technique that combines the efficiency of Flash Attention with sparse attention patterns. We'll cover:
+
+1. **Vanilla Attention**: Understanding the baseline transformer attention mechanism and its computational challenges
+2. **Flash Attention**: How block-wise computation and careful memory management improves efficiency
+3. **α-entmax**: A differentiable sparse alternative to softmax that learns to focus on relevant tokens
+4. **AdaSplash**: The novel combination of Flash Attention's memory optimizations with α-entmax's sparsity
+5. **Implementation**: Practical code examples and performance analysis
+
+
+
+# Vanilla Attention
+Vanilla attention is the foundational mechanism in transformer architectures, computing relevance scores between all pairs of tokens in a sequence. The standard formula for attention is:
+
+$$
+\text{Attention}(Q, K, V) = \text{softmax}\left(\frac{QK^T}{\sqrt{d_k}}\right)V
+$$
+
+
+However, vanilla attention has significant computational and memory challenges:
+
+1. **Quadratic Memory**: The attention matrix $QK^T$ has size $(n \times n)$, meaning memory requirements grow quadratically with sequence length. For a sequence of length 1024, we need to store over 1 million attention scores.
+
+2. **Quadratic Compute**: Computing all pairwise interactions between tokens requires $O(n^2)$ operations. This becomes prohibitively expensive for long sequences.
+
+3. **Memory Access Pattern**: The algorithm requires multiple passes over the large attention matrix:
+   - First to compute $QK^T$
+   - Then to apply softmax normalization
+   - Finally to multiply with $V$
+
+For example, with a sequence length of 1024 and hidden dimension of 64:
+- $QK^T$ computation: ~67 million FLOPs
+- Memory required for attention matrix: 4MB (assuming float32)
+- Total memory bandwidth used: >12MB due to multiple passes
+
+These limitations make vanilla attention impractical for longer sequences, motivating the development of more efficient variants like Flash Attention and Adaptive Splash Attention.
+
+# Flash Attention (Dao et al)
+Flash Attention splits the $Q$ and $K$ matrices into blocks that fit in GPU SRAM (a small but fast memory cache, typically 64-128KB per SM). By carefully managing data movement between SRAM and slower DRAM memory, it significantly reduces memory bandwidth and improves performance.
+
+The key insight is breaking down attention computation into SRAM-sized blocks:
+
+For a block of queries $Q_i$ and keys $K_j$, we compute:
+
+$$
+S_{ij} = Q_i K_j^T = \begin{bmatrix} 
+q_{i1} \cdot k_{j1} & q_{i1} \cdot k_{j2} & \cdots \\
+q_{i2} \cdot k_{j1} & q_{i2} \cdot k_{j2} & \cdots \\
+\vdots & \vdots & \ddots
+\end{bmatrix}
+$$
+
+The algorithm:
+1. Loads Q and K blocks into SRAM
+2. Computes local attention scores
+3. Updates softmax statistics
+4. Multiplies with V block
+5. Accumulates results
+
+It maintains running statistics for stable softmax:
+
+$$
+m_i = \max_{j \leq B} S_{ij} \quad \quad l_i = \sum_{j \leq B} e^{S_{ij} - m_i}
+$$
+
+Key benefits:
+- O(1) memory complexity vs O(n²)
+- ~10x less memory bandwidth
+- Better cache usage
+- No full attention matrix storage
+
+While Flash Attention requires slightly more compute operations, the dramatic reduction in memory access makes it significantly faster than vanilla attention, especially for long sequences.
+
+
+# Splash Attention
+
+In traditional English, we notice that not every word will provide valuable information or "attention" to every other word. 
+
+For example in the sentence "The cat quickly jumped over the brown fence and landed gracefully on the other side", words like "the" and "and" contribute relatively little attention to understanding the core meaning compared to content words like "cat", "jumped", "fence", and "gracefully".
+
+Therefore, we can introduce some sparsity via having a "sliding window" of some sorts. In this case, we introduce a **mask** that reduces compute from $O(N^2 * D)$ to $O(NSD)$ where every query attends to $S<<N$ keys
+
+This is where sparsity arises from. In the dense case, we have to multiply every $Q_i$ to every $K_j$ in the sequence. Sparse attention masks evertyhing that isn't within a region.
+- $Q_0$: ${K_0, K_1}$
+- $Q_1$: ${K_0, K_1, K_2}$
+- $Q_2$: ${K_1, K_2, K_3}$
+- $Q_3$: ${K_2, K_3, K_4}$
+- $Q_4$: ${K_3, K_4, K_5}$
+
+
+# Adaptive Splash Attention (Goncalves et al.)
+
+Now we know an example of splash attention and flash attention, we can dive into the literature of **Adaptive-Splash Attention**. Something to keep in mind is that "sparse" has many definitions in attention optimizations. 
+ - **Region-based sparsity**: Only compute attention within predefined blocks or regions of the sequence
+ - **Threshold-based pruning**: Zero out attention weights that fall below a certain threshold, removing weak connections
+ - **Learnable sparsity**: Use trainable parameters to adaptively determine which attention connections to keep or drop during training
+
+
+ So currently, the original softmax is dense, meaning that it puts non-zero probability on all tokens. 
+ 
+ An alternative to this is the **α-entmax transformation**, which can learn to put exactly zero probability on some tokens, creating sparse attention patterns. The **α parameter** controls how sparse the output distribution becomes - as α increases, more tokens get zero probability.
+
+### Softmax Alternative
+
+Let's break down the α-entmax formula:
+
+$$
+\text{α-entmax}(s) = [(α-1)s - τ]_+^{\frac{1}{α-1}}
+$$
+
+Where:
+- $s$ is the input score vector (logits)
+- $τ$ is a threshold/normalizing constant 
+- $[·]_+$ is the **ReLU function** that zeros out negative values
+- $α > 1$ is the sparsity parameter
+
+This formula is quite elegant in how it achieves sparsity:
+
+1. The term $(α-1)s - τ$ shifts and scales the input scores
+
+2. The ReLU function $[·]_+$ zeros out any values below the threshold $τ/(α-1)$, creating sparsity
+
+3. The exponent $\frac{1}{α-1}$ rescales the remaining non-zero values to form a valid probability distribution
+
+The key insight is that unlike softmax which always gives non-zero probabilities, α-entmax can output exact zeros when input scores fall below the learned threshold $τ$. The $α$ parameter controls how aggressive this thresholding is:
+
+- As $α \to 1$: Approaches **softmax** (dense)
+- $α = 1.5$: Moderate sparsity
+- $α = 2.0$: High sparsity (**sparsemax**)
+- $α > 2$: Very sparse attention
+
+
+The **threshold parameter** $τ$ plays a crucial role in α-entmax by determining which attention scores get zeroed out. Specifically:
+
+1. $τ$ is computed to ensure the output probabilities sum to 1:
+   $$\sum_i [(α-1)s_i - τ]_+^{\frac{1}{α-1}} = 1$$
+
+2. Values of $s_i$ where $(α-1)s_i < τ$ get mapped to exactly 0
+
+This thresholding behavior is what enables α-entmax to learn sparse attention patterns adaptively during training, focusing only on the most relevant tokens.
+
+### Halley Bisection Theorem
+To be able to find this perfect $τ$, we could run a traditional bisection (binary search) algorithm. However, we can use **Halley's method** of convergence that uses first and second derivatives to offer cubic convergence.
+
+Let's assume that we are trying to find the root of this function:
+
+$f(\tau) = \sum_i [(α-1)s_i - \tau]_+^{\frac{1}{α-1}} - 1$
+
+
+
+The **bisection algorithm** updates the search interval based on the function value:
+
+- If $f(τ) < 0$: Set interval to $(τ_{lo}, τ)$
+- Otherwise: Set interval to $(τ, τ_{hi})$
+- After each iteration, we update $τ$ to be the midpoint: $$τ = \frac{τ_{lo} + τ_{hi}}{2}$$
+
+However, with **Halley's method**, we can use the first derivatives as follows:
+
+$$
+f'(\tau) = -\sum_i \frac{1}{α-1} [(α-1)s_i - \tau]_+^{\frac{1}{α-1}-1}
+$$
+
+$$
+f''(\tau) = \sum_i \frac{2-α}{(α-1)^2} [(α-1)s_i - \tau]_+^{\frac{1}{α-1}-2}
+$$
+
+and we get Halley's root finding as:
+
+$$
+\tau_{n+1} = \tau_n - \frac{2f(\tau_n)f'(\tau_n)}{2(f'(\tau_n))^2 - f(\tau_n)f''(\tau_n)}
+$$
+
+Additionally, to ensure convergence and we are always tau's estimation, we have a fail-safe mechanism that uses bisection when Halley's method prdouces an update that moves the solution out of the bisection bounds. 
+
+
+### Forward Pass Implementation
+
+For the forward pass, I implemented block-wise computation to keep memory usage low. Let me walk you through how I did it:
+
+
+1. They split up the computation into blocks so they don't need to store the whole attention matrix at once. The algorithm will split $Q$ into $T_r$ blocks and $K$ into $T_c$ blocks.
+
+   $$f(\tau) = \sum_{j=1}^{T_c} f(\tau; S_i^{(j)})$$
+
+   Here $S_i^{(j)}$ is just a slice of the score matrix for each block. This is the function as a sum over all the blocks. 
+
+2. They will recompute these $S$ and $P$ matrices during backpropogation, similar to **gradient checkpointing**. This also sees an increase im space constraint while a decrease in memory.
+
+3. We will conduct sparse masking at the block level based on any individual score $S_{ij}>T_i$
+
+$$
+M_{ij} =
+\begin{cases}
+1 & \text{if } \exists i' \in \mathcal{I}(i), j' \in \mathcal{J}(j) \text{ such that } S_{i'j'} > \tau_{i'} \\
+0 & \text{otherwise}
+\end{cases}
+$$
+
+
+### Backward Pass
+
+Conveniently, running backpropogation on a α-entmax matrix is calculated as: 
+
+The backward pass leverages sparsity in the **α-entmax Jacobian** for memory and compute efficiency. Let's break down how this works:
+
+First, we need to differentiate through:
+
+$$
+\mathbf{p} = \text{α-entmax}(\mathbf{s})
+$$
+
+where $\mathbf{s}$ is the attention score vector and $\mathbf{p}$ is the attention weight vector. We need $\frac{\partial \mathbf{p}}{\partial \mathbf{s}}$ for backpropagation.
+
+The **Jacobian** of α-entmax (Peters et al., 2019) is:
+
+$$
+\frac{\partial \text{α-entmax}(\mathbf{s})}{\partial \mathbf{s}} = \text{Diag}(\mathbf{u}) - \frac{\mathbf{u} \mathbf{u}^\top}{\|\mathbf{u}\|_1}
+$$
+
+where $u_j = p_j^{2 - \alpha}$. This Jacobian is naturally sparse since many $p_j = 0$ (and thus $u_j = 0$), zeroing out rows/columns.
+
+For efficient block-wise computation, we define:
+- $U \in \mathbb{R}^{n \times n}$: matrix with $U_{lk} = P_{lk}^{2 - \alpha}$
+- $U_i^{(j)} \in \mathbb{R}^{B_r \times B_c}$: block of $U$ for query block $i$ and key block $j$
+
+The gradient with respect to scores is then:
+
+$$
+dS_i^{(j)} = U_i^{(j)} \odot dP_i^{(j)} - \text{Diag}(\delta_i) U_i^{(j)}
+$$
+
+where:
+- $dP_i^{(j)} = dO_i V_j^\top$ 
+- $\delta_l = \frac{\sum_k U_{lk} \cdot dP_{lk}}{\sum_k U_{lk}}$ for each row $l$
+
+The first term $U_i^{(j)} \odot dP_i^{(j)}$ handles element-wise gradient scaling based on the sparsity pattern, while $\text{Diag}(\delta_i) U_i^{(j)}$ provides the necessary correction to ensure projection orthogonal to $u$.
+
+This formulation is efficient because it:
+- Avoids materializing the full Jacobian by only computing non-zero elements
+- Works block-wise to align with GPU memory layout
+- Enables fast, memory-efficient backpropagation through α-entmax attention
+
+**The rest of the matix updates for $Q,K,V$ are trivial chain-rule implementations following the derivative w.r.t $s$.**
+
+
+## Code Implementation
+You can find my full code implementation in CUDA [here](https://github.com/mvideet/Adaptive-Splash-Attention).
+
+You can find the author's full code implementation in Triton [here](https://github.com/deep-spin/adasplash).

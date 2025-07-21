@@ -117,15 +117,16 @@ const About = () => {
           transition={{ duration: 0.5, delay: 0.2 }}>
           <div>
             <p>
-              Hi! My name is Videet Mehta and I'm a student at MIT studying Computer Science. I'm
-              originally from Houston, Texas. I'm interested in AI research and applied-AI in the
-              startup space.
+              Hi! I'm Videet Mehta, a Computer Science student at MIT passionate about pushing the
+              boundaries of AI. My interests focuses on optimizing large language models and
+              understanding reasoning capabilities. In the future, I want to work on either
+              applied-AI or in core-AI research.
             </p>
 
             <p>
               Fast-forward to today, and I've had the privilege of working at{' '}
               <a href="https://mercuria.com/">a commodities trading firm</a>,{' '}
-              <a href="https://www.sarvam.ai/">an AI industry research lab</a>, and{' '}
+              <a href="https://www.sarvam.ai/">an AI industry research lab</a>,{' '}
               <a href="https://www.hiddenstudios.gg/">a gaming start-up</a>,{' '}
               <a href="https://sls.csail.mit.edu/">an MIT NLP lab</a>
             </p>
@@ -133,7 +134,7 @@ const About = () => {
             <p>
               Additionally, I'm proud to have represented USA in the{' '}
               <a href="https://ioai-official.org/the-worlds-best-studios-in-ai-honoured-at-the-first-international-artificial-intelligence-olympiad-in-burgas-bulgaria/">
-                2024 International Olympiad in Artificial Intelligence
+                International Olympiad in Artificial Intelligence
               </a>{' '}
               and to have won a gold medal!
             </p>

@@ -3,7 +3,7 @@ date: '2025-02-21'
 title: 'Founding Engineer'
 company: 'Hidden Studios'
 location: 'Cambridge, MA'
-range: 'Feb. 2025 - Present'
+range: 'Feb. 2025 - June 2025'
 url: 'https://www.hiddenstudios.gg'
 ---
 
