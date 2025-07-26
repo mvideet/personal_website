@@ -226,3 +226,9 @@ for iteration = 1,2,... do:
 - For large-scale post-training, having just couple of value-layers and parameters to generate the value function is unsufficient. They sometimes require a completely seperate model. 
 - In the LLM context, usually the last token is assigned the reward (good answer or bad answer), but PPO needs to find $r_t$ at each time step to find $\delta_t$. Propagating one reward across all time-steps is not a great idea
 - **That's why Deepseek came up with Group-Relative Policy Optimization (GRPO) that removes the need for a Value head!**
+
+
+## References
+
+- Schulman, J., Wolski, F., Dhariwal, P., Radford, A., & Klimov, O. (2017). **Proximal Policy Optimization Algorithms**. [arXiv:1707.06347](https://arxiv.org/pdf/1707.06347).
+
