@@ -11,6 +11,8 @@ This blog will cover the math that goges behind how a diffusion model works, how
 
 These models are the foundation of generative audio, images, videos, and world models.
 
+There might be couple of mathematical errors. Just wanted to preface with that lol. 
+
 
 # Basics
 
@@ -91,7 +93,7 @@ Or more explicitly:
 $$
 x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)\right) + \sigma_t\epsilon'
 $$
-
+People often set $\sigma_t$ to $\sqrt{\tilde{\beta}_t}$ and $\epsilon'$ is just another random noise vector sampled from a standard normal distribution, independent from the original noise $\epsilon$ used in the forward process. This additional noise term helps maintain stochasticity in the reverse process.
 > Now, we directly predict this noise vector and since we know the true $\epsilon$ used to form $x_t$, we can train our model by minimizing the mean squared error: $\mathcal{L} = ||\epsilon - \epsilon_\theta(x_t,t)||^2$
 
 
