@@ -1,0 +1,304 @@
+---
+title: 'Denoising Diffusion Models (Literally)'
+description: 'Understand WTF a Diffusion Model via Probabilities'
+date: '2025-08-02'
+slug: '/blog/diffusion'
+tags: ['Diffusion', 'Probabilistic']
+---
+
+Hey everyone! This Saturday, I will be discussing what Denoising Diffusion Probabilistic Models. 
+This blog will cover the math that goges behind how a diffusion model works, how we prove it to be a generative model, and the loss function on how it learns to generate images.
+
+These models are the foundation of generative audio, images, videos, and world models.
+
+
+# Basics
+
+Diffusion models are modesl that noise the image such that it fully becomes **Gaussian Noise** at time $T$, and then we have a probabilistic model that attempts to reconstruct the image be gradually denoising the model. 
+
+$x_0 \xrightarrow{\text{noise}} x_1 \xrightarrow{\text{noise}} x_2 \xrightarrow{\text{noise}} \cdots \xrightarrow{\text{noise}} x_T$
+
+Then, we have a neural network that steps backward from $t=T$ to $t=0$ by learning and predicting how to undo the last noise.
+
+$x_T \xrightarrow{\text{denoise}} x_{T-1} \xrightarrow{\text{denoise}} x_{T-2} \xrightarrow{\text{denoise}} \cdots \xrightarrow{\text{denoise}} x_0$
+
+# Forward Process
+
+We define the forward process as this. Q is the function that is noising the model.
+$q(x_t | x_{t-1}) = \mathcal{N}(x_t; \underbrace{\sqrt{1-\beta_t} x_{t-1}}_{\text{mean}}, \underbrace{\beta_t\mathbf{I}}_{\text{std}})$
+
+This isn't important for right now, but  we can simplify this to
+
+$q(x_t | x_{t-1}) = \sqrt{1-\beta_t} x_{t-1} + \sqrt{\beta_t}\epsilon$ where $\epsilon \sim \mathcal{N}(0,\mathbf{I})$
+
+Essentially, what this is saying is that at each time step $t$, we add some Gaussian noise to the previous state $x_{t-1}$ with a variance of $\beta_t$, while also scaling down the previous state by $\sqrt{1-\beta_t}$ to maintain a stable signal-to-noise ratio. This process gradually converts our original image into pure Gaussian noise.
+
+If we accumulate this across all $T$ timesteps, it is just taking the product across all timesteps
+
+$q(x_T | x_0) = \mathcal{N}(x_T; \underbrace{\sqrt{\bar{\alpha}_T} x_0}_{\text{mean}}, \underbrace{(1-\bar{\alpha}_T) \mathbf{I}}_{\text{std}})$
+
+where ${\alpha}_t = 1- {\beta}_t$ and $\bar{\alpha}_t = \prod_{s=1}^t \alpha_s$.
+
+
+Thus, we get that:
+
+
+$$
+x_t = \sqrt{\bar{\alpha}_t} x_0 + \sqrt{1-\bar{\alpha}_t} \epsilon \text{ where } \epsilon \sim \mathcal{N}(0,\mathbf{I})
+$$
+
+Now, given a noising schedule $\beta_t$, we are able to calculate the noised image $x_t$ in one pass using the above equation, without having to iterate through all intermediate steps. This is a key efficiency gain for the forward process.
+
+
+# Reverse Process
+
+Now to learn how to denoise this "image", we have our neural network that we call $p_\theta$ which learns to predict the mean of the Gaussian distribution for the previous timestep
+
+$p_\theta(x_{t-1} | x_t) = \mathcal{N}(x_{t-1}; \mu_\theta(x_t,t), \sigma_t^2\mathbf{I})$
+
+where $\mu_\theta(x_t,t)$ is predicted by our neural network. But how do we find this mean?
+
+First, let's rearrange our forward process equation to solve for $x_0$:
+
+$x_0 = \frac{1}{\sqrt{\bar{\alpha}_t}}(x_t - \sqrt{1-\bar{\alpha}_t}\epsilon)$
+
+Because our forward process is Gaussian, the posterior $q(x_{t-1}|x_t,x_0)$ is also Gaussian:
+
+$$
+q(x_{t-1}|x_t,x_0) = \mathcal{N}(x_{t-1}; \tilde{\mu}_t(x_t,x_0), \tilde{\beta}_t\mathbf{I})
+$$
+
+with parameters:
+
+$\tilde{\mu}_t(x_t,x_0) = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{1-\bar{\alpha}_t}(x_t - \sqrt{\bar{\alpha}_t}x_0)\right)$ (Ho et al. derive this closed form expression for the posterior mean)
+
+$\tilde{\beta}_t = \frac{1-\bar{\alpha}_{t-1}}{1-\bar{\alpha}_t}\beta_t$
+
+Instead of directly predicting $\mu_\theta$, we train our network $\epsilon_\theta(x_t,t)$ to predict the noise $\epsilon$. Substituting $x_t - \sqrt{\bar{\alpha}_t}x_0 = \sqrt{1-\bar{\alpha}_t}\epsilon$ into $\tilde{\mu}_t$:
+
+$\tilde{\mu}_t(x_t,x_0) = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon\right)$
+
+Replacing $\epsilon$ with our predicted $\epsilon_\theta(x_t,t)$ gives us our model mean:
+
+$\mu_\theta(x_t,t) = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)\right)$
+
+Finally, to sample $x_{t-1}$:
+
+$x_{t-1} = \mu_\theta(x_t,t) + \sigma_t\epsilon'$ where $\epsilon' \sim \mathcal{N}(0,\mathbf{I})$
+
+Or more explicitly:
+
+$$
+x_{t-1} = \frac{1}{\sqrt{\alpha_t}}\left(x_t - \frac{\beta_t}{\sqrt{1-\bar{\alpha}_t}}\epsilon_\theta(x_t,t)\right) + \sigma_t\epsilon'
+$$
+
+> Now, we directly predict this noise vector and since we know the true $\epsilon$ used to form $x_t$, we can train our model by minimizing the mean squared error: $\mathcal{L} = ||\epsilon - \epsilon_\theta(x_t,t)||^2$
+
+
+
+# Evidence Lower Bound (ELBO) and Loss Function Derivation
+
+Now, we are going to prove ELBO which guarantees that we approximating the true data distribution and gives us a good way to choose ${\sigma}_t$.
+
+## KL Divergence
+A quick discussion about KL divergence. This tells us the number of extra bits requried to encode samples from Q to P. We always want to minimize this divergence between our model distribution and the true data distribution. Mathematically, KL divergence is defined as:
+
+
+$$
+D_{KL}(Q||P) = \mathbb{E}_{x\sim Q}[\log Q(x) - \log P(x)] = \int Q(x) \log \frac{Q(x)}{P(x)} dx
+$$
+
+
+## Deriving log p_θ(x_0)
+
+Let's derive the log likelihood of our model. We can write:
+
+$$
+\log p_\theta(x_0) = \log \int p_\theta(x_{0:T}) dx_{1:T} = \log \int q(x_{1:T}|x_0) \frac{p_\theta(x_{0:T})}{q(x_{1:T}|x_0)} dx_{1:T}
+$$
+
+Then, Jensen's Equality says that 
+for any concave function $f$ (like $\log$) and random variable $X$:
+
+$f(\mathbb{E}[X]) \geq \mathbb{E}[f(X)]$
+
+Applying this to our equation:
+
+$$
+\log p_\theta(x_0) \geq \mathbb{E}_{q(x_{1:T}|x_0)}\left[\log p_\theta(x_{0:T}) - \log q(x_{1:T}|x_0)\right]
+$$
+
+> This is called the Evidence Lower BOund (ELBO) because it provides a lower bound on the evidence (log likelihood) of our model. In other words, it gives us a guaranteed minimum value for $\log p_\theta(x_0)$, which represents how well our model can explain the observed data (the evidence).
+
+Now, we know the following from the diffusion process:
+
+$p_\theta(x_{0:T}) = p(x_T)\prod_{t=1}^T p_\theta(x_{t-1}|x_t)$
+
+$q(x_{1:T}|x_0) = \prod_{t=1}^T q(x_t|x_{t-1})$
+
+where:
+- $p(x_T)$ is the prior noise distribution $\mathcal{N}(0,\mathbf{I})$
+- $p_\theta(x_{t-1}|x_t)$ is our learned reverse process
+- $q(x_t|x_{t-1})$ is the forward diffusion process we defined earlier
+- Obviously, when we take the log of this, we get summation instead of product
+
+
+Substituting these into our ELBO equation:
+$$
+\log p_\theta(x_0) \geq \mathbb{E}_{q(x_{1:T}|x_0)}\left[\log \frac{p(x_T)\prod_{t=1}^T p_\theta(x_{t-1}|x_t)}{\prod_{t=1}^T q(x_t|x_{t-1})}\right] \\
+= \mathbb{E}_{q}\left[\log p(x_T) + \sum_{t=1}^T \log p_\theta(x_{t-1}|x_t) - \sum_{t=1}^T \log q(x_t|x_{t-1})\right] \\
+= \mathbb{E}_{q}\left[\log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_t|x_{t-1})}\right]
+$$
+
+> We want to maximize this ELBO expression as it lower bounds our model's log likelihood. Maximizing this bound helps our model better explain the observed data by improving how well it fits the true data distribution. In practice, we typically minimize the negative ELBO since optimization algorithms are designed to minimize loss functions.
+
+
+Now, for KL simplification we use Bayes's rule to rewrite $q(x_{t}|x_{t-1})$:
+
+$$
+q(x_t|x_{t-1}) = \frac{q(x_{t-1}|x_t)q(x_t)}{q(x_{t-1})} 
+$$
+
+Substituting this back into our ELBO equation:
+
+$$
+\mathbb{E}_{q}\left[\log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1}|x_t)q(x_{t-1})}{q(x_{t-1}|x_t)q(x_t)}\right]
+$$
+
+This can be rearranged as:
+
+$$
+\mathbb{E}_{q}\left[\log p(x_T) + \sum_{t=1}^T \log \frac{p_\theta(x_{t-1}|x_t)}{q(x_{t-1}|x_t,x_0)} + \sum_{t=1}^T \log \frac{q(x_{t-1}|x_0)}{q(x_t|x_0)}\right]
+$$
+
+1. The first term $\log p(x_T)$ is the log probability of the final noisy sample. Since $x_T \sim \mathcal{N}(0,\mathbf{I})$, this equals $-\frac{1}{2}x_T^Tx_T - \frac{n}{2}\log(2\pi)$ where n is the dimensionality.
+2. The second term gives us a sum of KL divergences comparing our learned reverse process to the true posterior:
+   $\sum_{t=1}^T D_{KL}[q(x_{t-1}|x_t,x_0) \| p_\theta(x_{t-1}|x_t)]$
+3. The third term telescopes (cancels out) to:
+   $\log q(x_0) - \log q(x_T|x_0)$
+
+Now, we get the final equation that we are trying to minimize:
+
+> $$
+\mathcal{L}_{ELBO} = \mathbb{E}_{q}\left[\frac{1}{2}x_T^Tx_T + \sum_{t=1}^T D_{KL}[q(x_{t-1}|x_t,x_0) \| p_\theta(x_{t-1}|x_t)] + \log q(x_0) - \log q(x_T|x_0)\right]
+>$$
+
+This is our final loss function that we minimize during training. Let's break down what each term represents:
+
+1. $\frac{1}{2}x_T^Tx_T$: The log probability of the final noise (ignoring constants)
+2. $\sum_{t=1}^T D_{KL}[q(x_{t-1}|x_t,x_0) \| p_\theta(x_{t-1}|x_t)]$: KL divergence between true and predicted reverse processes
+3. $\log q(x_0)$: Log likelihood of initial data point
+4. $-\log q(x_T|x_0)$: Log likelihood of final noise given initial data
+
+
+THe only $\theta$-dependent part that we need to optimize under is the KL term. Each KL term in the summation becomes a quadratic. We won't go into too much depth regarding proving this. However, we get that we are trying to minimize the MSE error as shown previously.
+
+
+>$$
+\mathcal{L}_{simple} = \mathbb{E}_{x_0,\epsilon,t}\left[\|\epsilon - \epsilon_\theta(x_t,t)\|^2\right]
+>$$
+
+where $\epsilon$ is the original noise we sampled and $\epsilon_\theta$ is our model's prediction of that noise. This simple MSE objective is what we actually minimize during training, rather than working with the full ELBO loss directly.
+
+
+# Psuedocode
+GPT has generated this psueodcode. It may not be correct.
+
+## Training
+
+```python 
+# Pseudocode for DDPM Training
+
+# 1. Hyperparameters
+T = 1000                     # total diffusion steps
+beta_start, beta_end = 1e-4, 0.02
+num_epochs = 50
+batch_size = 64
+learning_rate = 1e-4
+
+# 2. Precompute noise schedule
+#    β_t linearly spaced from beta_start to beta_end
+betas = linspace(beta_start, beta_end, T)          # shape: (T,)
+alphas = 1.0 - betas                               # α_t = 1 - β_t
+alpha_bars = cumprod(alphas)                       # \barα_t = ∏_{s=1}^t α_s
+
+# 3. Model setup
+θ = initialize_model_parameters()                  # parameters of ε_θ(x, t)
+optimizer = Adam(θ, lr=learning_rate)
+
+# 4. Training loop
+for epoch in range(num_epochs):
+    for x_0 in DataLoader(dataset, batch_size):   # x_0: clean images, shape (B, C, H, W)
+        
+        # a) Sample random timesteps t for each image in the batch
+        t = randint(1, T, size=B)                 # t ∈ {1,…,T}
+        
+        # b) Draw fresh Gaussian noise ε ∼ N(0, I)
+        ε = randn_like(x_0)                       # same shape as x_0
+        
+        # c) Compute noisy images x_t using closed‐form forward process
+        #    x_t = √(ᾱ_t) * x_0  +  √(1 − ᾱ_t) * ε
+        sqrt_alpha_bar = sqrt(alpha_bars[t])      # shape: (B,)
+        sqrt_one_minus_alpha_bar = sqrt(1 - alpha_bars[t])
+        x_t = sqrt_alpha_bar * x_0 + sqrt_one_minus_alpha_bar * ε
+        
+        # d) Predict noise with the model
+        #    ε_θ(x_t, t) — network takes noisy image and timestep embedding
+        ε_pred = model(x_t, t)
+        
+        # e) Compute the mean‐squared error loss
+        #    L = ||ε − ε_pred||^2
+        loss = MSE(ε, ε_pred)
+        
+        # f) Backpropagate and update parameters
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+    
+    # (Optional) Log progress, sample images, etc.
+    print(f"Epoch {epoch+1}/{num_epochs}, Loss: {loss.item():.4f}")
+
+# End of training
+# The network θ has learned to predict the noise added at any timestep t.
+```
+## Inference/Sampling
+```python
+# Pseudocode for DDPM Sampling (Image Generation)
+
+T = 1000                       # total diffusion steps
+betas = linspace(beta_start, beta_end, T)
+alphas = 1.0 - betas
+alpha_bars = cumprod(alphas)
+# Often precompute: 
+#   sqrt_recip_alphas = sqrt(1/alphas)
+#   sqrt_one_minus_alpha_bars = sqrt(1 - alpha_bars)
+
+# 1. Start from pure noise
+x_T = randn(shape=(C, H, W))   # sample from N(0, I)
+
+# 2. Reverse loop: from t=T down to 1
+for t in reversed(range(1, T+1)):
+    # a) Predict ε at this timestep
+    ε_pred = model(x_T, t)     # ε_θ(x_t, t)
+    
+    # b) Compute the “denoised” mean μ_θ(x_t, t)
+    mu = (1.0 / sqrt(alphas[t])) * (
+           x_T 
+           - (betas[t] / sqrt(1 - alpha_bars[t])) * ε_pred
+         )
+    
+    # c) Compute σ_t (often = sqrt(betas[t]) or a clipped version of it)
+    sigma_t = sqrt(betas[t])
+    
+    # d) Sample noise for stochasticity, except at the last step
+    if t > 1:
+        z = randn_like(x_T)
+    else:
+        z = 0
+    
+    # e) Step to x_{t-1}
+    x_T = mu + sigma_t * z
+
+# 3. x_0 is now your generated image
+generated_image = x_T
+```
