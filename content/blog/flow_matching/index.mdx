@@ -1,0 +1,333 @@
+---
+title: 'Flow Matching Models'
+description: 'Flow Matching Models are Generative Models'
+date: '2025-08-08'
+slug: '/blog/fmm'
+tags: ['Diffusion', 'ODE']
+---
+
+Today, we will discuss an alternative to denoising diffusion probabilistic models (DDPM), and model the denoising of an image via flow matching.
+
+
+Flow matching has shown promising results across various generative tasks:
+
+- **Image Generation**: Flow matching models generates high-quality images by learning smooth trajectories from noise to realistic photos, offering results similar to with state-of-the-art diffusion models while requiring fewer sampling steps.
+
+- **3D World Generation**: In virtual world synthesis, flow matching enables continuous generation of 3D scenes by learning vector fields that transform random noise into coherent geometry and textures.
+- **Audio Generation**: For sound synthesis, flow matching can model the complex temporal dynamics of audio waveforms by following learned trajectories in the audio feature space.
+
+# Introduction
+The key idea is to define a vector field that describes how points should move at each position to transform the noise distribution into the data distribution. This is similar to watching particles flow in a fluid - each particle follows a path determined by the surrounding flow.
+
+
+The model learns the optimal vector field by matching it to "ground truth" flows between paired noise and data samples. Once trained, we can generate new samples by:
+
+1. Sampling from the noise distribution
+2. Following the learned vector field (solving the ODE)
+3. Arriving at a sample from the data distribution
+
+The main advantages of flow matching compared to diffusion models are:
+
+- No fixed number of steps - we can adjust sampling precision vs speed
+- Direct optimization of the vector field wi thout auxiliary losses
+- Exact likelihood computation through the change of variables formula
+
+However, they can be more challenging to train since we need to learn a continuous vector field rather than discrete denoising steps. For this, we will learn the proof and the math that surrounds matching an objective function of flow matching.
+
+
+**This blog will be highly proof-based and use lots of probability terminology and notation**.
+
+# Notation
+
+- $x_0 \sim \mathcal{N}(0,I)$: random noise sampled from standard normal distribution
+- $x_1 \sim p(x_1)$: real image/data-point sampled from true data distribution
+- $\phi_t(x_0)$: continuous-time transformation that moves $x_0$ to $x_1$ 
+- $\frac{d}{dt}\phi_t(x_0)$: true velocity field at time $t$ for point $x_0$
+- $v_\theta(t,x)$: neural network prediction of the velocity field at time $t$ and position $x$
+- $p_t(x)$: how likely $x$ is at each time $t \in [0,1]$
+
+# Continous Normalizing Flows
+Our goal in Continous Normalizing Flows (CNF) is to train a neural network $v_\theta(t,x)$ that learns the optimal velocity field. This means we want, 
+
+ $$
+ \frac{d}{dt}\phi_t(x) = v_\theta(t,\phi_t(x))
+ $$
+
+We also assume that the $\phi_0(x) = x$, meaning that at $t=0$, we start at $x$. Then we follow something called the push-forward equation, or the Forward Density Push:
+
+$$
+p_t = [\phi_t]_*p_0
+$$
+
+Once again, this means that at time $t$, the probability desnity $p_t$ is just the original probability density $p_0$ after being moved by $\phi_t$.
+
+This operator $*$ is defined by
+
+$$
+[\phi_t]_*p_0(x) = p_0(\phi_t^{-1}(x)) \left|\det \frac{\partial \phi_t^{-1}}{\partial x}(x)\right|
+$$
+
+This formula tells us that to find the density at some point $x$ at time $t$, we can look backwards to find where this $x$ came from at time $0$ via $\phi_t^{-1}$ (the inverse flow), and multiply the original density at that point by the determinant of the Jacobian of the inverse transformation.
+
+> Example: If we want to know the probability density of marbles in a box at some point $x$ at time $t$, we can find the original point $\phi_t^{-1}(x)$ at $t=0$. $p_0(\phi_t^{-1}(x))$ tells us how dense the marbles were there initially. Then the determinant accounts for the dilation of the box over time. 
+
+# Flow Matching
+
+**Now we will talk about flow matching. This is essentially attempting to model flow of probability distrubtion from noisy data all the way to a clear image.**
+
+Let $q(x_1)$ be our distrubiton of data (images in this case). Let's assume that **we only have access to data samples and no access to the density function of $q$**
+
+As previously mentioned $p_t$ is our probability path such that $p_0 = p$ where $p(x) = \mathcal{N}(x|0, \mathbf{I})$. And then trivially, our $p_1 = q(x_1)$
+
+With this, we attempt to match $v_t(x)$ to $u_t(x)$ via MSE loss,
+
+$$
+L_{FM}(\theta) = \mathbb{E}_{t,p_t(x)} \|v_\theta(t,x) - u_t(x)\|^2
+$$
+
+From a perfectly learned $v_t(x)$, we would be able to generate the probability distrbution $p_t(x)$. However, we **don't** have the closed-form truth $u_t(x)$ that would generate us the $p_t(x)$, thus the novelty in this paper shows that $p_t(x)$ and $u_t(x)$ can be constructed via probability paths and vector fields.
+
+
+
+# Conditional Probability Paths 
+
+Using the notation from above, we can denote the conditional probability of $p_t(x)$ as,
+$$
+p_t(x) = \int p_t(x|x_1)q(x_1)dx_1
+$$
+
+> This integral tells us that the probability density $p_t(x)$ at any point $x$ and time $t$ is found by considering all possible final points $x_1$ (weighted by their probability $q(x_1)$) and integrating over the conditional probabilities $p_t(x|x_1)$ of being at $x$ at time $t$ given that we end at $x_1$.
+
+For $t=1$, we see that the probability that we end up at $x$, given that our end state is $x_1$, is the probability that $x$ is in the data.
+
+$$
+p_1(x) = \int p_1(x|x_1)q(x_1)dx_1 = q(x)
+$$
+
+
+More importantly and similarly, we can marginalize all the vector fields via the following equation,
+
+$$
+u_t(x) = \int u_t(x|x_1) \frac{p_t(x|x_1)q(x_1)}{p_t(x)} dx_1
+$$
+This integral represents how we combine vector fields from different flows. At each point $x$, we take all possible endpoint states $x_1$ and their corresponding vector fields $u_t(x|x_1)$. Each vector field is weighted by the ratio $\frac{p_t(x|x_1)q(x_1)}{p_t(x)}$, which represents the relative contribution of that endpoint to the total probability at $x$. The weighted vectors are then summed up to give us the overall vector field $u_t(x)$ at that point.
+
+> However, integrating over all data points is inefficient and results in a poor calculation of $u_t$. Thus, they propose a simpler objective that results in the same optimal solution:
+
+$$
+L_{CFM}(\theta) = \mathbb{E}_{t,q(x_1),p_t(x|x_1)} \|v_\theta(t,x) - u_t(x|x_1)\|^2
+$$
+
+It is somewhat easier to calculate $u_t(x|x_1)$ because it is on a per sample basis. Additionally, they claim in Thm 2. that the gradients of $L_{CFM}$ and $L_{FM}$ are equivalent, making them optimally the same.
+
+
+
+# Conditional Probability Path
+
+Here, we will be defining an explicit version of $\phi_t$. But before that we will write the probability $p(x|x_1)$ as the probability that at $x$ is at time $t$ given that we get $x_1$ at $t=1$.
+We formulate this as,
+
+$$
+p_t(x|x_1) = \mathcal{N}(x|\mu_t(x_1),\sigma_t^2(x_1)\mathbf{I})
+$$
+
+and we have a time-scalar standard deviation and mean. Namely,
+
+$\mu_t(x_1) = t \cdot x_1$ and $\sigma_t = \sqrt{1-t^2}$. $\mu_t(x_1)$ represents the **mean of the conditional probability distribution at time $t$ given the endpoint $x_1$**. 
+
+Additionally, we have the base conditions as $\mu_0(x_1) = 0$ and $\sigma_0(x_1) = 1$ so that $p_0(x) = \mathcal{N}(x|0,\mathbf{I})$ (randomly-noised image) and then $\mu_1(x_1) = x_1$ and $\sigma_1(x_1) = \sigma_{min}$ (the ground truth image with some slight variance) which allows for $p_1(x|x_1) ~ x_1$.
+
+
+### Multiple Gaussian Probability Paths
+Another problem that we have is that there are many vector fields that could possibly generate a particular probability path. Let's look at a simple example:
+
+Imagine we have a 1D Gaussian distribution that we want to transform into another Gaussian distribution that's shifted to the right. We could:
+1. Move all points directly to the right at a constant speed
+2. Have points on the left move faster than points on the right
+3. Have points temporarily move up/down before reaching their final position
+
+All of these different vector fields would result in the same final distribution, even though the paths taken by individual points are different. This illustrates how multiple vector fields can generate the same probability path.
+
+
+### Simple Affine Transformation
+
+That's why we rely on a simple affine transformation for Gaussian distributions to give us the simplest possible vector field..
+$$
+\phi_t(x) = \sigma_t(x_1) \cdot x + \mu_t(x_1)
+$$
+
+Essentially $\phi_t$ pushes the noise distribution wich starts off as $p_0(x|x_1)$ all the way to the ground truth image $p_t(x|x_1)$. This can be formally writted as,
+
+$$
+[\phi_t]_* * p(x) = p_t(x|x_1)
+$$
+$\phi_t$ gives us where a sample **should** be along the flow from noise to data. If we have noisy image $x_0$ and apply $\phi_t(x_0)$, then we should get a sample from the intermediate distribution of $p_t(x|x_1)$.
+
+
+### Vector Field Substitution
+
+Now that we have a position estimate at every point $t$, we can take the derivative of $\phi_t(x)$ with respect to $t$ to give us the estimate of the vector field,
+
+$$
+\frac{d}{dt} \phi_t(x) = u_t(\phi_t(x)|x_1)
+$$
+
+$$
+\mathcal{L}_{\mathrm{CFM}}(\theta) = \mathbb{E}_{t,\,q(x_1),\,p(x_0)}
+\left\| v_\theta(\phi_t(x_0)) - \frac{d}{dt} \phi_t(x_0) \right\|^2
+$$
+
+We can use $x_0$ in this case because we will be sampling $x_0 \sim p_0$ and compute $x_t$ deterministically via $\phi_t$ which is the movement function.
+
+
+### Proof of Vector Field Uniqueness
+
+1) First, recall that $\phi_t(x) = \sigma_t(x_1) \cdot x + \mu_t(x_1)$ is our flow map.
+
+2) To find the vector field $u_t$, we need to take the time derivative of $\phi_t(x)$:
+
+   $$
+   \begin{aligned}
+   \frac{d}{dt} \phi_t(x) &= \frac{d}{dt}[\sigma_t(x_1) \cdot x + \mu_t(x_1)] \\
+   &= \sigma'_t(x_1) \cdot x + \mu'_t(x_1)
+   \end{aligned}
+   $$
+
+3) Now, we need to express this in terms of $\phi_t(x)$ instead of $x$. From the flow map equation:
+   
+   $$x = \frac{\phi_t(x) - \mu_t(x_1)}{\sigma_t(x_1)}$$
+
+4) Substituting this back into our derivative:
+
+   $$
+   \begin{aligned}
+   \frac{d}{dt} \phi_t(x) &= \sigma'_t(x_1) \cdot \left(\frac{\phi_t(x) - \mu_t(x_1)}{\sigma_t(x_1)}\right) + \mu'_t(x_1) \\
+   &= \frac{\sigma'_t(x_1)}{\sigma_t(x_1)}(\phi_t(x) - \mu_t(x_1)) + \mu'_t(x_1)
+   \end{aligned}
+   $$
+
+5) By definition of the vector field:
+
+   $$u_t(\phi_t(x)|x_1) = \frac{d}{dt} \phi_t(x)$$
+
+6) Therefore:
+
+   $$u_t(x|x_1) = \frac{\sigma'_t(x_1)}{\sigma_t(x_1)}(x - \mu_t(x_1)) + \mu'_t(x_1)$$
+
+This proves that the vector field has the claimed form. The uniqueness follows from the fact that this is the only vector field that can generate the given flow map $\phi_t$. 
+
+
+> In the CFM loss, we already calculate $\phi_t(x_0)$ for the forward pass of the neural network and we just compare that to the true derivative of $\frac{d}{dt} \phi_t(x_0)$ rather than going down to the $u_t(x|x_1)$ derivation.
+
+
+## Variance Exploding Diffusion
+
+Variance Exploding (VE) diffusion adds more and more Gaussian noise to the data as time goes on, so the overall variance keeps growing. In contrast, Variance Preserving (VP) diffusion keeps the total variance fixed by scaling the signal as it adds noise. VE is useful when you want the noise level itself to grow significantly during the process.
+
+Variance Exploding path has the form,
+$$
+p_t(x) = N(x|x_1, \sigma_{1-t}^2I)
+$$
+
+where $\sigma_t$ is  increasing and $\sigma_t = 0$. Then
+
+where $\sigma_t$ is an increasing function, $\sigma_0 = 0$, and $\sigma_1 \gg 1$. For VE diffusion, we have:
+
+1) From the given form of $p_t(x)$, we can identify that:
+   - $\mu_t(x_1) = x_1$ (the mean)
+   - $\sigma_t(x_1) = \sigma_{1-t}$ (the standard deviation)
+
+2) Substituting these into the general vector field formula derived earlier:
+
+   $$u_t(x|x_1) = \frac{\sigma'_t(x_1)}{\sigma_t(x_1)}(x - \mu_t(x_1)) + \mu'_t(x_1)$$
+
+3) We have:
+   - $\mu'_t(x_1) = 0$ since $\mu_t(x_1)$ is constant with respect to $t$
+   - $\sigma_t(x_1) = \sigma_{1-t}$, so $\sigma'_t(x_1) = -\sigma'_{1-t}$ by the chain rule
+
+4) Therefore:
+
+   $$
+   \begin{aligned}
+   u_t(x|x_1) &= \frac{-\sigma'_{1-t}}{\sigma_{1-t}}(x - x_1) + 0 \\
+   &= -\frac{\sigma'_{1-t}}{\sigma_{1-t}}(x-x_1)
+   \end{aligned}
+   $$
+
+Note that $\sigma'_{1-t}$ is positive since $\sigma_t$ is increasing, but appears negative in our final expression due to the chain rule when we changed from $t$ to $1-t$. This gives us the vector field for Variance Exploding diffusion.
+
+
+## Variance Preserving Diffusion
+
+Variance Preserving Diffusion is the traditional continous diffusion equation. We have the following path for DDPM (my previous blog) as, 
+For discrete DDPM, we have:
+For Variance Preserving (VP) diffusion, the path from noise to data has the form:
+$$
+p_t(x|x_1) = \mathcal{N}\big(x \,\big|\, \alpha_{1-t}x_1, \, (1-\alpha^2_{1-t})I\big),
+$$
+where
+$$
+\alpha_t = e^{-\frac{1}{2}T(t)}, \quad T(t) = \int_0^t \beta(s)ds,
+$$
+and $\beta(t)$ is the noise schedule.
+
+This gives us a continuous-time VP diffusion path where:
+- The mean is scaled by $\alpha_{1-t}$
+- The variance is $(1-\alpha^2_{1-t})I$
+- The total variance remains constant (variance preserving) for all $t$
+
+Note that this formulation goes from noise ($t=0$) to data ($t=1$), which is the **reverse** of the traditional DDPM formulation. The amplitude $\alpha_t$ is defined using half the time integral compared to the forward process to maintain consistency with the variance preserving property.
+
+
+
+We have:
+- $\mu_t(x_1) = \alpha_{1-t}x_1$ 
+- $\sigma_t(x_1) = \sqrt{1-\alpha^2_{1-t}}$
+
+Then, substituting them into the original formula for $u_t(x|x_1)$,
+$$
+\begin{aligned}
+u_t(x|x_1) &= \frac{\alpha'_{1-t}}{1-\alpha^2_{1-t}}(\alpha_{1-t}x - x_1) \\
+&= \frac{T'(1-t)}{1-e^{-T(1-t)}}(e^{-T(1-t)}x - e^{-\frac{1}{2}T(1-t)}x_1)
+\end{aligned}
+$$
+
+where we used:
+- $\alpha'_{1-t} = -\frac{1}{2}T'(1-t)e^{-\frac{1}{2}T(1-t)}$
+- $\alpha_{1-t} = e^{-\frac{1}{2}T(1-t)}$
+
+This gives us the vector field for Variance Preserving diffusion, which describes how points should move at each time $t$ to transform the noise distribution into the data distribution while preserving total variance.
+
+# Example
+
+Let's say that we have a noise starting at $x_0 = 0.5$ and our ground truth image as $x_1=1$
+
+$\mu_t(x_1) = t*x_1$ and $\sigma_t(x_1) = \sqrt(1-t^2)$.
+
+
+Now we have the formula for $\phi_t(x_0) = \sqrt{1-t^2} \cdot 0.5 + t$
+
+To get the denoised image at $t=0.6$, or $\phi_{0.6} (0.5) = \sqrt{1-0.6^2} \cdot 0.5 + 0.6 = 1.0$
+
+
+To get the ground-truth velocity at that point, we have the formula
+
+$$
+u_t(x|x_1) = \frac{d}{dt}\phi_t(x_0) = -\frac{t}{\sqrt{1-t^2}} \cdot 0.5 + 1
+$$
+
+At $t=0.6$, the ground truth velocity would be:
+
+$$
+u_{0.6}(x|x_1) = -\frac{0.6}{\sqrt{1-0.6^2}} \cdot 0.5 + 1 = 0.625
+$$
+
+This means that at time $t=0.6$, the neural network should predict that we are moving with velocity 0.625 in the positive direction.
+
+We can verify this makes sense because:
+1. At $t=0$, velocity is 1 (maximum speed toward target)
+2. As $t$ increases, velocity decreases as we get closer to target
+3. At $t=1$, velocity approaches 0 (we've reached the target)
+
+# References 
+1. [Flow Matching for Generative Modeling](https://arxiv.org/pdf/2210.02747) - The original paper introducing Flow Matching as a framework for generative modeling
