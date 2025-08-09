@@ -259,8 +259,33 @@ Note that $\sigma'_{1-t}$ is positive since $\sigma_t$ is increasing, but appear
 
 ## Variance Preserving Diffusion
 
+> Note: Unlike DDPM where $x_0$ is the ground truth image, in Flow Matching $x_0$ is the noise and $x_1$ is the ground truth image. This reversal makes the math more intuitive for describing the flow from noise to data.
+
 Variance Preserving Diffusion is the traditional continous diffusion equation. We have the following path for DDPM (my previous blog) as, 
-For discrete DDPM, we have:
+
+$$
+x_t = \sqrt{\alpha_t}x_0 + \sqrt{1-\alpha_t}\epsilon
+$$
+
+where $\alpha_t = \prod_{s=1}^t (1-\beta_s)$ and $\epsilon \sim \mathcal{N}(0,I)$. This is the forward process that gradually adds noise to the image $x_0$ until we reach pure noise.
+
+For Flow Matching, we need to transition from the discrete DDPM formulation to a continuous version. The key is to recognize that in the discrete case, we have:
+
+$$
+x_t = \sqrt{\alpha_t}x_0 + \sqrt{1-\alpha_t}\epsilon
+$$
+
+To make this continuous, we:
+
+1. Replace the discrete time steps with a continuous time parameter $t \in [0,1]$
+2. Express $\alpha_t$ as a continuous function: $\alpha_t = e^{-\frac{1}{2}T(t)}$ 
+3. Replace the discrete noise schedule $\beta_t$ with a continuous function $\beta(t)$
+4. Define $T(t)$ as the cumulative integral: $T(t) = \int_0^t \beta(s)ds$
+
+This gives us a smooth, continuous path from noise to data, rather than discrete steps. The resulting continuous formulation becomes:
+
+
+
 For Variance Preserving (VP) diffusion, the path from noise to data has the form:
 $$
 p_t(x|x_1) = \mathcal{N}\big(x \,\big|\, \alpha_{1-t}x_1, \, (1-\alpha^2_{1-t})I\big),
@@ -331,3 +356,4 @@ We can verify this makes sense because:
 
 # References 
 1. [Flow Matching for Generative Modeling](https://arxiv.org/pdf/2210.02747) - The original paper introducing Flow Matching as a framework for generative modeling
+tx
