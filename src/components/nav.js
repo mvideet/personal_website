@@ -6,6 +6,7 @@ import styled, { css } from 'styled-components';
 import { navLinks } from '@config';
 import { useScrollDirection, usePrefersReducedMotion } from '@hooks';
 import { Menu } from '@components';
+import ThemeToggle from './theme-toggle';
 import { IconLogo } from '@components/icons';
 
 const StyledHeader = styled(motion.header)`
@@ -16,7 +17,7 @@ const StyledHeader = styled(motion.header)`
   padding: 0px 50px;
   width: 100%;
   height: var(--nav-height);
-  background-color: rgba(15, 23, 42, 0.85);
+  background-color: color-mix(in oklab, var(--navy) 85%, transparent);
   backdrop-filter: blur(10px);
   transition: var(--transition);
 
@@ -34,7 +35,7 @@ const StyledHeader = styled(motion.header)`
       css`
         height: var(--nav-scroll-height);
         transform: translateY(0px);
-        background-color: rgba(15, 23, 42, 0.85);
+        background-color: color-mix(in oklab, var(--navy) 85%, transparent);
         box-shadow: 0 10px 30px -10px var(--navy-shadow);
       `};
 
@@ -201,7 +202,8 @@ const Nav = ({ isHome }) => {
           </ol>
         </StyledLinks>
 
-        <motion.div variants={navItemVariants}>
+        <motion.div variants={navItemVariants} style={{ display: 'flex', gap: 10 }}>
+          <ThemeToggle />
           <Menu />
         </motion.div>
       </StyledNav>

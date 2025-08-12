@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 const StyledIntroSection = styled.section`
   max-width: 900px;
   margin: 0 auto;
-  padding-top: 10px;
+  padding-top: calc(var(--nav-height) + 20px);
 
   .overline {
     color: var(--primary);

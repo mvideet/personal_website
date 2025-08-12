@@ -50,6 +50,25 @@ const variables = css`
     --ham-after-active: bottom 0.1s ease-out,
       transform 0.22s cubic-bezier(0.215, 0.61, 0.355, 1) 0.12s;
   }
+
+  /* Light theme overrides */
+  [data-theme='light'] {
+    --dark-navy: #f8fafc; /* surfaces */
+    --navy: #ffffff; /* background */
+    --light-navy: #f1f5f9; /* cards */
+    --lightest-navy: #e2e8f0; /* borders */
+    --navy-shadow: rgba(0, 0, 0, 0.08);
+
+    --slate: #475569; /* text secondary */
+    --light-slate: #334155; /* text stronger */
+    --lightest-slate: #0f172a; /* headings */
+    --white: #0b1220; /* inverted */
+
+    --primary: #0ea5e9; /* accent */
+    --primary-tint: rgba(14, 165, 233, 0.15);
+    --secondary: #64748b;
+    --green: var(--primary);
+  }
 `;
 
 export default variables;
