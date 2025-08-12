@@ -3,7 +3,7 @@
   publish = "public"
 
 [build.environment]
-  NODE_VERSION = "16"
+  NODE_VERSION = "20"
   YARN_FLAGS = "--production=false"
   YARN_VERSION = "1.22.22"
   NODE_ENV = "production"
