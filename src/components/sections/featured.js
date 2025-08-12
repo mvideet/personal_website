@@ -67,7 +67,6 @@ const Featured = () => {
           node {
             frontmatter {
               title
-              cover
               tech
               github
             }
