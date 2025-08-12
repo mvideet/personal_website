@@ -7,6 +7,4 @@ range: 'Feb. 2025 - June 2025'
 url: 'https://www.hiddenstudios.gg'
 ---
 
-- Built a full-stack in-game advertising platform using Node.js and MongoDB, enabling dynamic ad placement and analytics for live gameplay environments.
-- Co-developed machine learning models to predict in-game ad impressions per player based on gameplay context and ad characteristics.
-- Automated gameplay data collection with a Selenium-based agent, streamlining ad tracking and performance monitoring across supported titles.
+Built a full-stack in-game advertising platform with analytics, ML-based impression prediction, and automated gameplay data collection.

@@ -2,19 +2,23 @@ import { css } from 'styled-components';
 
 const variables = css`
   :root {
-    --dark-navy: #0f0a1a; /* Very dark purple-tinted */
-    --navy: #1a1125; /* Dark purple-tinted */
-    --light-navy: #2d1b3d; /* Medium purple-tinted */
-    --lightest-navy: #3d2951; /* Lighter purple-tinted */
-    --navy-shadow: rgba(15, 10, 26, 0.7);
-    --slate: #94a3b8;
-    --light-slate: #cbd5e1;
-    --lightest-slate: #f1f5f9;
-    --white: #f8fafc;
+    /* Neutral, desaturated dark theme */
+    --dark-navy: #0b1220; /* deep blue-gray */
+    --navy: #0f172a; /* slate-900 */
+    --light-navy: #1f2937; /* gray-800 */
+    --lightest-navy: #334155; /* slate-700 */
+    --navy-shadow: rgba(2, 6, 23, 0.7);
+    --slate: #94a3b8; /* slate-400 */
+    --light-slate: #cbd5e1; /* slate-300 */
+    --lightest-slate: #e5e7eb; /* gray-200 */
+    --white: #f9fafb; /* gray-50 */
 
-    --primary: #8b5cf6;
-    --primary-tint: rgba(139, 92, 246, 0.1);
-    --secondary: #a855f7;
+    /* Neutral accent (subtle) */
+    --primary: #94a3b8; /* slate-400 */
+    --primary-tint: rgba(148, 163, 184, 0.15);
+    --secondary: #a1a1aa; /* zinc-400 */
+    /* Back-compat with mixins expecting --green */
+    --green: var(--primary);
 
     --font-sans: 'Inter', -apple-system, system-ui, sans-serif;
     --font-mono: 'JetBrains Mono', 'Fira Code', 'Fira Mono', 'Roboto Mono', monospace;

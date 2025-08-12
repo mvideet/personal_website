@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { graphql, Link } from 'gatsby';
 import { MDXRenderer } from 'gatsby-plugin-mdx';
 import PropTypes from 'prop-types';
@@ -136,6 +136,55 @@ const StyledPostContent = styled.div`
   }
 `;
 
+const StyledComments = styled.section`
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--lightest-navy);
+`;
+
+const Comments = () => {
+  const containerRef = useRef(null);
+
+  useEffect(() => {
+    // Only run on the client and only if not already injected
+    if (!containerRef.current) {return;}
+    if (containerRef.current.hasChildNodes()) {return;}
+
+    const {
+      GATSBY_GISCUS_REPO,
+      GATSBY_GISCUS_REPO_ID,
+      GATSBY_GISCUS_CATEGORY,
+      GATSBY_GISCUS_CATEGORY_ID,
+    } = process.env;
+
+    const repo = GATSBY_GISCUS_REPO || 'mvideet/personal_website';
+    const repoId = GATSBY_GISCUS_REPO_ID || 'R_kgDOPIuPlg';
+    const category = GATSBY_GISCUS_CATEGORY || 'Q&A';
+    const categoryId = GATSBY_GISCUS_CATEGORY_ID || 'DIC_kwDOPIuPls4CuGlR';
+
+    // Proceed even if env vars are not set by falling back to defaults above
+
+    const script = document.createElement('script');
+    script.src = 'https://giscus.app/client.js';
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.setAttribute('data-repo', repo);
+    script.setAttribute('data-repo-id', repoId);
+    script.setAttribute('data-category', category);
+    script.setAttribute('data-category-id', categoryId);
+    script.setAttribute('data-mapping', 'pathname');
+    script.setAttribute('data-strict', '1');
+    script.setAttribute('data-reactions-enabled', '1');
+    script.setAttribute('data-emit-metadata', '0');
+    script.setAttribute('data-input-position', 'bottom');
+    script.setAttribute('data-theme', 'preferred_color_scheme');
+    script.setAttribute('data-lang', 'en');
+    containerRef.current.appendChild(script);
+  }, []);
+
+  return <StyledComments ref={containerRef} aria-label="Comments" />;
+};
+
 const MdxPostTemplate = ({ data, location }) => {
   const { frontmatter, body } = data.mdx;
   const { title, date, tags } = frontmatter;
@@ -176,6 +225,8 @@ const MdxPostTemplate = ({ data, location }) => {
         <StyledPostContent>
           <MDXRenderer>{body}</MDXRenderer>
         </StyledPostContent>
+
+        <Comments />
       </StyledPostContainer>
     </Layout>
   );

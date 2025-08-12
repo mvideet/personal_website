@@ -12,6 +12,9 @@
   ],
   "license": "MIT",
   "browserslist": "> 0.25%, not dead",
+  "engines": {
+    "node": "16.x"
+  },
   "scripts": {
     "build": "gatsby build",
     "develop": "gatsby develop",
@@ -85,6 +88,7 @@
   "resolutions": {
     "minimatch": "^3.1.2",
     "glob": "^7.2.3",
-    "cheerio": "^1.0.0-rc.12"
+    "cheerio": "^1.0.0-rc.12",
+    "yoga-layout-prebuilt": "1.9.2"
   }
 }
