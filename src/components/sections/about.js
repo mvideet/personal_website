@@ -91,7 +91,7 @@ const About = () => {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true });
 
-  const skills = ['Python', 'PyTorch', 'JAX', 'SQL', 'Node.JS', 'React'];
+  const skills = ['PyTorch', 'JAX', 'DDP', 'Deepspeed', 'CUDA', 'SQL', 'Node.JS', 'React'];
 
   const variants = {
     hidden: { opacity: 0, y: 20 },

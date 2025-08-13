@@ -315,8 +315,8 @@ const Hero = () => {
   // const three = <h3 className="big-heading"></h3>;
   const four = (
     <p>
-      I'm a student at MIT studying Computer Science. I'm passionate about frontier AI research and
-      its applications in the real world.
+      I'm a student at MIT studying Computer Science. I'm passionate about frontier AI research in
+      multi-modal large language models.
     </p>
   );
   const five = (
