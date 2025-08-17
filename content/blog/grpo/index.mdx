@@ -1,0 +1,327 @@
+---
+title: 'Group Relative & Sequence Policy Optimization'
+description: 'Understanding GRPO and GRSO'
+date: '2025-08-15'
+slug: '/blog/grpo'
+tags: ['machine-learning', 'mathematics', 'rl']
+
+---
+Today we will be talking about Group Relative Policy Optimization and Group Sequence Policy Optimization.
+
+These RL algorithms have started to take the LLM post-training world by storm since the release of Deepseek. 
+
+This will complement the PPO blog.
+
+# Group Relative Policy Optimization
+
+## Overview
+
+In PPO, there is the need of a critic network, known as the value head. Training such a head would require a completely separate LLM trained on estimating the expected future rewards for given states and actions.
+
+Unfortunately, this is an extremely compute-intensive process. Therefore, Deepseek considered, **"How can we determine which sequences are good relative to all the other generated sequences?"**.
+
+In GRPO, they 
+- Drop the value network but keep the reward model
+- Samples multiple completions and scores them to find the average score.
+
+
+## Notation
+
+## Notation Explained
+Let's break down the key notation in the GRPO formula:
+
+- **$q$**: The query/prompt given to the model, sampled from $P(Q)$.
+
+- **$G$**: Number of output sequences generated per query (the "group" size).
+
+- **$o_i$**: The $i$-th output sequence for query $q$.
+
+- **$|o_i|$**: Length of the $i$-th output sequence.
+
+- **$o_{i,t}$**: The $t$-th token in the $i$-th output sequence.
+
+- **$o_{i,<t}$**: All tokens before position $t$ in the $i$-th sequence.
+
+- **$\pi_\theta(O|q)$**: The policy generating outputs given query $q$.
+
+- **$\pi_\theta(o_{i,t}|q, o_{i,<t})$**: Probability of generating token $o_{i,t}$ under current policy.
+
+- **$\pi_{\theta_{old}}(o_{i,t}|q, o_{i,<t})$**: Same probability under old policy.
+
+- **$\hat{A}_{i,t}$**: Advantage estimate for token $o_{i,t}$, derived from comparing sequence reward to group average.
+
+- **$r_{i,t}(\theta)$**: Probability ratio between current and old policies.
+
+- **$\varepsilon$**: Clipping parameter limiting policy change magnitude.
+
+- **$\beta$**: KL divergence coefficient.
+
+- **$\pi_{ref}$**: Reference policy (usually pre-trained model) preventing excessive deviation.
+
+
+## Algorithm
+
+If we recall the Proximal Policy Optimization Algorithm,
+
+The PPO algorithm can be summarized as follows:
+   - Compute advantage estimates Â_t using GAE (Generalized Advantage Estimation)
+   - Update the policy by maximizing the PPO objective:
+     $$
+     L^{CLIP}(\theta) = \mathbb{E}_t \left[ \min \left( \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)} \hat{A}_t, \text{clip} \left( \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}, 1-\epsilon, 1+\epsilon \right) \hat{A}_t \right) \right]
+     $$
+   - Update the value function by regression on mean-squared error:
+     $$
+     L^{VF}(\phi) = \mathbb{E}_t \left[ (V_\phi(s_t) - \hat{R}_t)^2 \right]
+     $$
+
+
+
+
+The GRPO loss function can be mathematically expressed as follows:
+$$
+J_{GRPO}(\theta) = \mathbb{E}_{[q \sim P(Q), \{o_i\}^G_{i=1} \sim \pi_{\theta_{old}}(O|q)]} \left[ \frac{1}{G} \sum^{G}_{i=1} \frac{1}{|o_i|} \sum^{|o_i|}_{t=1} \min \left( \frac{\pi_\theta(o_{i,t}|q, o_{i,<t})}{\pi_{\theta_{old}}(o_{i,t}|q, o_{i,<t})} \hat{A}_{i,t}, \text{clip} \left( \frac{\pi_\theta(o_{i,t}|q, o_{i,<t})}{\pi_{\theta_{old}}(o_{i,t}|q, o_{i,<t})}, 1-\varepsilon, 1+\varepsilon \right) \hat{A}_{i,t} \right) - \beta D_{KL}(\pi_\theta || \pi_{ref}) \right]
+$$
+
+This can be simplified to 
+
+$$
+J_{GRPO}(\theta) = \mathbb{E}_{[q \sim P(Q), \{o_i\}^G_{i=1} \sim \pi_{\theta_{old}}(O|q)]} \left[ \frac{1}{G} \sum^{G}_{i=1} \frac{1}{|o_i|} \sum^{|o_i|}_{t=1} \min \left( r_{i,t}(\theta) \hat{A}_{i,t}, \text{clip} \left( r_{i,t}(\theta), 1-\varepsilon, 1+\varepsilon \right) \hat{A}_{i,t} \right) - \beta D_{KL}(\pi_\theta || \pi_{ref}) \right]
+$$
+
+where $r_{i,t}(\theta) = \frac{\pi_\theta(o_{i,t}|q, o_{i,<t})}{\pi_{\theta_{old}}(o_{i,t}|q, o_{i,<t})}$ is the probability ratio between the current policy and the old policy.
+
+> GRPO's objective function J_GRPO(θ) guides the model to generate better responses by comparing multiple outputs for the same prompt, calculating advantages based on group performance, and updating the policy in a controlled manner while preventing excessive deviation from its original behavior.
+
+
+
+### Advantage Surrogate
+
+Now that we don't have a value function, we need to have the advantage estimation $\hat{A}_{i,t}$ for each token. In GRPO, this advantage is computed by comparing the reward of a sequence to the average reward of the group. 
+
+For every output, we have the reward:
+
+$$
+r_{\tilde{i}} = \frac{r_i - \text{mean}(r_{1:G})}{\text{std}(r_{1:G}) + \epsilon}
+$$
+
+## KL divergence
+
+I thought the intuition behind this part of the equation was quite intuitive. We don't want to have a very drastic distrubtion shift from our old policy. Thus, we want to keep $\pi_{new}$ to $\pi_{old}$ and penalize large distribution shifts.
+
+$$
+D_{KL} (p||q) = \mathbb{E}_{o \sim p} \left[\frac{q(o)}{p(o)} - \log\left(\frac{q(o)}{p(o)}\right) - 1\right]
+$$
+
+where $\pi_{new}=p$ and $\pi_{old}=q$
+
+Now we simplify the first as 
+$$\sum_o p(o) \cdot \frac{q(o)}{p(o)} = \sum_o q(o) = 1$$
+
+
+Then, we simplify
+$$\mathbb{E}_{p} \left[-\log\left(\frac{q(o)}{p(o)}\right)\right] = \sum_o p(o) \cdot \log\left(\frac{p(o)}{q(o)}\right) = D_{KL}(p||q)$$
+
+Thus we have the KL term as 
+$$
+D_{KL}(p||q) = \mathbb{E}_{o \sim p} \left[\log\left(\frac{p(o)}{q(o)}\right)\right]
+$$
+
+## Process Supervision
+
+The previous GRPO algorithm gives us a reward at the end of each output which may not be efficient or be of high signal. 
+
+Thus, process supervision provides a reward for each reasoning step. 
+
+Let's say that we have $G$ sampled ouptputs ${o_1, o_2, o_3, ... , o_G}$ and our rewards are 
+
+$R = \{\{r_1^{(index(1))}, \cdots, r_1^{(index(K_1))}\}, \cdots, \{r_G^{(index(1))}, \cdots, r_G^{(index(K_G))}\}\}$
+
+where index(x) is the end token index of the xth step and $K_i$ is the total number of steps in the i-th output. We normalize these across the entire output as 
+
+$$
+r_i^{(index(j))} = \frac{r_i^{(index(j))} - \text{mean}(R)}{\text{std}(R) + \epsilon}
+$$
+
+
+Then our advatange of each token is the cumulative sum uptill that token. This means that earlier tokens are given higher reward because it rewards going down that path while later tokens have a smaller reward. 
+
+
+$$
+\hat{A}_{i,t} = \sum_{index(j) \geq t} r_i^{index(j)}
+$$
+
+
+
+
+## GRPO Gradient 
+
+## GRPO Gradient 
+
+Now let's derive the gradient of the GRPO objective function. Recall that the GRPO objective is:
+
+$$
+J(\theta) = \mathbb{E}_{q \sim P_{sft}, \{o_i\} \sim \pi_{\theta}} \left[ \frac{1}{G} \sum_{i=1}^G \sum_{t=1}^{|o_i|} \hat{A}_{i,t} - \beta \cdot KL(\pi_{ref} \parallel \pi_{\theta}) \right]
+$$
+
+Let's derive the gradient of this objective with respect to $\theta$.
+
+### Step 1 — Policy term (REINFORCE)
+
+I lowkey dont' know how they get to this $A_{i,t}$ term, but that will be a problem for another blog :)
+
+
+For the advantage term, we can apply the REINFORCE gradient, which allows us to compute the gradient of an expectation by using the score function (gradient of log probability) as follows:
+
+$$
+\nabla_{\theta} \mathbb{E}_{\pi_{\theta}} [A_{i,t}] = \mathbb{E}_{\pi_{\theta}} [A_{i,t} \nabla_{\theta} \log \pi_{\theta}(o_{i,t}|q, o_{i,<t})]
+$$
+
+### Step 2 — Reverse-KL term
+
+For the KL divergence term, we have:
+
+$$
+KL(\pi_{ref} \parallel \pi_{\theta}) = \mathbb{E}_{o \sim \pi_{ref}} [\log \pi_{ref}(o|q) - \log \pi_{\theta}(o|q)]
+$$
+The gradient of the KL divergence term can be derived using the general formula for the gradient of an expectation:
+
+$$\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = \nabla_{\theta} \mathbb{E}_{o \sim \pi_{ref}} [\log \pi_{ref}(o|q) - \log \pi_{\theta}(o|q)]$$
+
+Since $\pi_{ref}$ doesn't depend on $\theta$, the first term's gradient is zero:
+
+$$\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\nabla_{\theta} \mathbb{E}_{o \sim \pi_{ref}} [\log \pi_{\theta}(o|q)] = -\mathbb{E}_{o \sim \pi_{ref}} [\nabla_{\theta} \log \pi_{\theta}(o|q)]$$
+
+### Changing the measure to $\pi_{\theta}$
+
+To convert the expectation from $\pi_{ref}$ to $\pi_{\theta}$, we can use importance sampling (noticei how if we expand the summation, the $\pi_{\theta}$ will cancel out and result in the previous expected value estimation. )
+
+$$\mathbb{E}_{o \sim \pi_{ref}} [\nabla_{\theta} \log \pi_{\theta}(o|q)] = \mathbb{E}_{o \sim \pi_{\theta}} \left[\frac{\pi_{ref}(o|q)}{\pi_{\theta}(o|q)} \nabla_{\theta} \log \pi_{\theta}(o|q)\right]$$
+
+Applying this to our KL gradient:
+
+$$\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\mathbb{E}_{o \sim \pi_{\theta}} \left[\frac{\pi_{ref}(o|q)}{\pi_{\theta}(o|q)} \nabla_{\theta} \log \pi_{\theta}(o|q)\right]$$
+
+When we factorize this at the token level:
+
+$$
+\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\mathbb{E}_{o \sim \pi_{\theta}} \left[\sum_{t=1}^{|o|} \frac{\pi_{ref}(o_t|q, o_{<t})}{\pi_{\theta}(o_t|q, o_{<t})} \nabla_{\theta} \log \pi_{\theta}(o_t|q, o_{<t})\right]
+$$
+
+> This allows us to express the KL gradient in terms of samples from our current policy $\pi_{\theta}$ rather than the reference policy $\pi_{ref}$.
+
+Additionally, 
+we can also note that the expected value of the score function is zero:
+$$
+\sum_{o} \pi_{\theta}(o) \nabla_{\theta} \log \pi_{\theta}(o) = \sum_{o} \pi_{\theta}(o) \frac{\nabla_{\theta} \pi_{\theta}(o)}{\pi_{\theta}(o)} = \sum_{o} \nabla_{\theta} \pi_{\theta}(o)
+$$
+
+$$
+= \nabla_{\theta} \sum_{o} \pi_{\theta}(o) = \nabla_{\theta} 1 = 0
+$$
+
+Thus the gradient has zero mean. Additionally, to reduce the variance, they do the following: 
+
+$$
+\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\mathbb{E}_{o \sim \pi_{\theta}} \left[\frac{\pi_{ref}(o|q)}{\pi_{\theta}(o|q)} \nabla_{\theta} \log \pi_{\theta}(o|q)\right]
+$$
+
+Let's call the coefficient $w(o) = \frac{\pi_{ref}(o|q)}{\pi_{\theta}(o|q)}$. Now, since $\mathbb{E}_{\pi_{\theta}}[1 \cdot \nabla \log \pi_{\theta}] = 0$, we can replace $w(o)$ by $w(o) - 1$ inside the expectation:
+
+$$
+\mathbb{E}_{\pi_{\theta}}[w(o) \nabla \log \pi_{\theta}] = \mathbb{E}_{\pi_{\theta}}[(w(o) - 1) \nabla \log \pi_{\theta}]
+$$
+
+This substitution doesn't change the expected value, but it can reduce the variance of the gradient estimate. The term $-1$ acts as a baseline for variance reduction. Therefore, we can rewrite the KL gradient as:
+
+$$
+\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\mathbb{E}_{o \sim \pi_{\theta}} \left[\left(\frac{\pi_{ref}(o|q)}{\pi_{\theta}(o|q)} - 1\right) \nabla_{\theta} \log \pi_{\theta}(o|q)\right]
+$$
+
+At the token level, this becomes:
+
+$$
+\nabla_{\theta} KL(\pi_{ref} \parallel \pi_{\theta}) = -\mathbb{E}_{o \sim \pi_{\theta}} \left[\sum_{t=1}^{|o|} \left(\frac{\pi_{ref}(o_t|q, o_{<t})}{\pi_{\theta}(o_t|q, o_{<t})} - 1\right) \nabla_{\theta} \log \pi_{\theta}(o_t|q, o_{<t})\right]
+$$
+
+
+
+### Step 3 — Final token-factored gradient
+
+Then we finally get the gradient update for GRPO:
+
+$$
+\nabla_{\theta} J(\theta) = \mathbb{E}_{q \sim P_{sft}, \{o_i\} \sim \pi_{\theta}} \left[ \frac{1}{G} \sum_{i=1}^G \sum_{t=1}^{|o_i|} \left( \hat{A}_{i,t} + \beta \left( \frac{\pi_{ref}(o_{i,t}|q, o_{i,<t})}{\pi_{\theta}(o_{i,t}|q, o_{i,<t})} - 1 \right) \right) \nabla_{\theta} \log \pi_{\theta}(o_{i,t}|q, o_{i,<t}) \right]
+$$
+
+
+# Group Sequence Policy Optimization
+
+The problem with GRPO is that we are compounding token level noise. There would be lots of noise in the gradient when trying to backprop and calculate a loss at the token level.
+> For example, if we're trying to optimize a policy to generate the response "The capital of France is Paris", token-level optimization might incorrectly penalize the token "Paris" if earlier tokens in the sequence had high variance in their probability estimates, leading to compounded errors in the gradient calculation.
+
+Thus, instead of evaluating a response at the token-level, the importance ratio $r_{i,t}(\theta)$ is at the sequence level (reasoning block, sentence, etc)
+
+For prompt $x$, we sample G responses and scores $r(x, y_i)$ and we get the advantage as,
+
+$$
+A_i = \frac{r(x, y_i) - \text{mean}\{r(x, y_i)\}_{i=1}^G}{\text{std}\{r(x, y_i)\}_{i=1}^G}
+$$
+
+Additionally, we write the importance ratio as $s_i(\theta)$ as,
+$$
+s_i(\theta) = \frac{\pi_{\theta}(y_i|x)}{\pi_{\theta_{old}}(y_i|x)}^{\frac{1}{|y_i|}} = \exp\left(\frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \log \frac{\pi_{\theta}(y_{i,t}|x, y_{i,<t})}{\pi_{\theta_{old}}(y_{i,t}|x, y_{i,<t})}\right)
+$$
+because of the property that $a^{1/T} = \exp(\frac{1}{T}\log (a))$
+> The $1/|y_i|$ normalization is crucial for two reasons: First, without normalization, multiplying many token probabilities together would cause the importance ratio to approach zero exponentially as sequence length increases.
+
+Finally, we have the GSPO objective function as,
+
+$$
+J_{GSPO}(\theta) = \mathbb{E}_{x \sim D, \{y_i\}_{i=1}^G \sim \pi_{\theta_{old}}(\cdot|x)} \left[ \frac{1}{G} \sum_{i=1}^G \min \left( s_i(\theta) A_i, \text{clip}(s_i(\theta), 1-\varepsilon, 1+\varepsilon) A_i \right) \right]
+$$
+Which is the typical GRPO objective function as well.
+
+
+## GSPO Gradient
+> The main difference is how they weight the gradeints of the log likelihood of tokens. Beacuse GSPo weights all the tokens equally, the training is much more stable and is dependent on the model producing a good sequence rather thant good tokens (there is a Token-level objective variant however, that helps iwth finer-trained control)
+
+Anyways, the GSPO gradient is very similar. We have that,
+$$
+\nabla_{\theta} J_{GSPO}(\theta) = \mathbb{E}_{x \sim D, \{y_i\}_{i=1}^G \sim \pi_{\theta_{old}}(\cdot|x)} \left[ \frac{1}{G} \sum_{i=1}^G \min \left( s_i(\theta) A_i, \text{clip}(s_i(\theta), 1-\varepsilon, 1+\varepsilon) A_i \right) \nabla_{\theta} \log \pi_{\theta}(y_i|x) \right]
+$$
+
+If we don't worry about the clipping, then we have:
+$$
+\nabla_{\theta} J_{GSPO}(\theta) = \mathbb{E}_{x \sim D, \{y_i\}_{i=1}^G \sim \pi_{\theta_{old}}(\cdot|x)} \left[ \frac{1}{G} \sum_{i=1}^G s_i(\theta) A_i \nabla_{\theta} \log \pi_{\theta}(y_i|x) \right]
+$$
+
+
+With the property of gradien of expectev values, we can move the gradient within the summation as,
+$$
+\nabla_{\theta} J_{GSPO}(\theta) = \mathbb{E}_{x \sim D, \{y_i\}_{i=1}^G \sim \pi_{\theta_{old}}(\cdot|x)} \left[ \frac{1}{G} \sum_{i=1}^G s_i(\theta) A_i \cdot \nabla_{\theta} \log s_i(\theta) \right]
+$$
+
+Where $\nabla_{\theta} \log s_i(\theta)$ can be expanded as:
+
+$$
+\nabla_{\theta} \log s_i(\theta) = \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_{\theta} \log \frac{\pi_{\theta}(y_{i,t}|x, y_{i,<t})}{\pi_{\theta_{old}}(y_{i,t}|x, y_{i,<t})} = \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_{\theta} \log \pi_{\theta}(y_{i,t}|x, y_{i,<t})
+$$
+
+because we can expand the log fraction as a different and the gradient w.r.t $\pi_\theta$ of $\pi_{old}$ is 0.
+
+Thus we get our gradient as, 
+$$
+\nabla_{\theta} J_{GSPO}(\theta) = \mathbb{E}_{x \sim D, \{y_i\}_{i=1}^G \sim \pi_{\theta_{old}}(\cdot|x)} \left[ \frac{1}{G} \sum_{i=1}^G s_i(\theta) A_i \cdot \frac{1}{|y_i|} \sum_{t=1}^{|y_i|} \nabla_{\theta} \log \pi_{\theta}(y_{i,t}|x, y_{i,<t}) \right]
+$$
+
+
+## GSPO > GRPO
+
+Research shows that GSPO performs better because of stabler gradients. Additionally, it provides higher training accuracy and performance in benchmarks. However, the number of clipped tokens in GSPO is much higher than in GRPO.
+
+
+# References 
+
+[1] [DeepSeekMath: Pushing the Limits of Mathematical Reasoning in Open Language Models](https://arxiv.org/abs/2402.03300)
+
+[2] [Group Sequence Policy Optimization](https://arxiv.org/abs/2507.18071)
