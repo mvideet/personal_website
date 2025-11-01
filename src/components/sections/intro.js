@@ -150,43 +150,42 @@ const Intro = () => {
           Videet Mehta.
         </motion.h1>
         <p className="tagline">
-          I'm a student at <strong style={{ color: 'var(--primary)' }}>MIT</strong> studying
-          Computer Science. I'm passionate about{' '}
-          <strong style={{ color: 'var(--primary)' }}>frontier AI research</strong> in multi-modal
-          large language models.
+          I'm a student at <strong>MIT</strong> studying Computer Science. I'm passionate about{' '}
+          <strong>frontier AI research</strong> in multi-modal LLMs and hardware/software model
+          acceleration.
         </p>
 
         <div className="body">
           <p>
-            I'm currently interning at{' '}
-            <a href="https://mercuria.com" target="_blank" rel="noreferrer">
-              <strong>Mercuria Energy Trading</strong>
-            </a>
-            , where I'm working on forecasting marginal prices and doing low-level{' '}
-            <strong style={{ color: 'var(--primary)' }}>GPU optimizations</strong> for weather
-            models. I'm also working at{' '}
-            <a href="https://sarvam.ai" target="_blank" rel="noreferrer">
-              <strong>Sarvam AI</strong>
+            I'm currently working at{' '}
+            <a href="https://hanlab.mit.edu/" target="_blank" rel="noreferrer">
+              <strong>HAN Lab</strong>
             </a>{' '}
-            to build India's first conversational speech AI in Hindi and English.
-          </p>
-          <p>
-            I'm also doing research at{' '}
+            at MIT, where we are attempting to accelerate diffusion language models. I'm also doing
+            research at{' '}
             <a href="https://sls.csail.mit.edu/" target="_blank" rel="noreferrer">
               <strong>MIT's Spoken Language Systems Lab</strong>
             </a>{' '}
             under Jehanzeb Mirza on finding optimal attention heads for audio event classification &
             spoofing detection.
           </p>
+
           <p>
-            I'm also proud to have previously represented{' '}
-            <strong style={{ color: 'var(--primary)' }}>USA</strong> in the{' '}
-            <strong style={{ color: 'var(--primary)' }}>
-              International Olympiad in Artificial Intelligence
-            </strong>{' '}
-            in 2024 and to have won a{' '}
-            <strong style={{ color: 'var(--primary)' }}>gold medal</strong>! I now am part of the
-            scientific committee for 2025 USA AI Olympiad Team.
+            Previously, I worked at{' '}
+            <a href="https://mercuria.com" target="_blank" rel="noreferrer">
+              <strong>Mercuria Energy</strong>
+            </a>{' '}
+            trading where I worked on forecasting marginal prices. Additionally, I did some work at{' '}
+            <a href="https://sarvam.ai" target="_blank" rel="noreferrer">
+              <strong>Sarvam AI</strong>
+            </a>{' '}
+            to build India's first conversational speech AI in Hindi and English.
+          </p>
+          <p>
+            I'm also proud to have previously represented <strong>USA</strong> in the{' '}
+            <strong>International Olympiad in Artificial Intelligence</strong> in 2024 and to have
+            won a <strong>gold medal</strong>! I am now on the organizing and scientific committee
+            for the 2026 USA AI Olympiad Team.
           </p>
           <p>Here are a few technologies I've been working with recently:</p>
           <SkillsList>
