@@ -2,7 +2,7 @@
 date: '2025-06-15'
 title: 'Machine Learning Engineer'
 company: 'Sarvam AI'
-range: 'June 2025 - Present'
+range: 'June 2025 - September 2025'
 url: 'https://www.sarvam.ai'
 ---
 
