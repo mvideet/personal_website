@@ -161,17 +161,24 @@ const Intro = () => {
             <a href="https://hanlab.mit.edu/" target="_blank" rel="noreferrer">
               <strong>HAN Lab</strong>
             </a>{' '}
-            at MIT, where we are attempting to accelerate diffusion language models. I'm also doing
-            research at{' '}
+            at MIT, where I'm using diffusion language models for speculative decoding. I'm also
+            doing research at{' '}
             <a href="https://sls.csail.mit.edu/" target="_blank" rel="noreferrer">
               <strong>MIT's Spoken Language Systems Lab</strong>
             </a>{' '}
-            under Jehanzeb Mirza on finding optimal attention heads for audio event classification &
-            spoofing detection.
+            on test-time training. I'll soon be joining{' '}
+            <a href="https://www.together.ai/" target="_blank" rel="noreferrer">
+              <strong>Together AI</strong>
+            </a>{' '}
+            as an incoming kernels researcher.
           </p>
 
           <p>
-            Previously, I worked at{' '}
+            Earlier this year, I worked at{' '}
+            <a href="https://www.liquid.ai/" target="_blank" rel="noreferrer">
+              <strong>Liquid AI</strong>
+            </a>{' '}
+            pretraining audio encoders for on-device deployment. Previously, I worked at{' '}
             <a href="https://mercuria.com" target="_blank" rel="noreferrer">
               <strong>Mercuria Energy</strong>
             </a>{' '}
