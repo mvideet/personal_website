@@ -1,6 +1,7 @@
 [build]
   command = "CI=false yarn build"
   publish = "public"
+  image = "ubuntu-focal-20"
 
 [build.environment]
   NODE_VERSION = "20"
