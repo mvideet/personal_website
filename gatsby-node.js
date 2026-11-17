@@ -24,6 +24,7 @@ exports.createSchemaCustomization = ({ actions }) => {
       tags: [String]
       slug: String
       external: Boolean
+      category: String
     }
   `;
   createTypes(typeDefs);
@@ -113,5 +114,23 @@ exports.onCreateWebpackConfig = ({ stage, loaders, actions }) => {
         '@utils': path.resolve(__dirname, 'src/utils'),
       },
     },
+  });
+};
+
+// Standalone HTML posts live in static/<name>/index.html. Netlify serves them at
+// /<name>/, but `gatsby develop` only serves exact file paths, so map folder
+// URLs to their index.html in development too.
+exports.onCreateDevServer = ({ app }) => {
+  const fs = require('fs');
+  const staticDir = path.resolve(__dirname, 'static');
+  app.use((req, res, next) => {
+    const urlPath = decodeURIComponent(req.path);
+    if (urlPath.endsWith('/') && urlPath !== '/') {
+      const file = path.join(staticDir, urlPath, 'index.html');
+      if (file.startsWith(staticDir) && fs.existsSync(file)) {
+        return res.sendFile(file);
+      }
+    }
+    return next();
   });
 };

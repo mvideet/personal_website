@@ -163,7 +163,7 @@ const Comments = () => {
 
 const MdxPostTemplate = ({ data, location }) => {
   const { frontmatter, body } = data.mdx;
-  const { title, date } = frontmatter;
+  const { title, date, category } = frontmatter;
 
   return (
     <Layout location={location}>
@@ -183,6 +183,7 @@ const MdxPostTemplate = ({ data, location }) => {
               timeZone: 'UTC',
             })}
           </time>
+          {category && <span className="category"> · {category}</span>}
         </p>
       </StyledPostHeader>
 
@@ -212,6 +213,7 @@ export const pageQuery = graphql`
         date
         slug
         tags
+        category
       }
     }
   }

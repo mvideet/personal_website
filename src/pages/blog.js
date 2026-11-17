@@ -5,6 +5,7 @@ import { Helmet } from 'react-helmet';
 import styled from 'styled-components';
 import { Layout } from '@components';
 import { RowList } from '../components/list';
+import CategoryTag from '../components/category-tag';
 import PostLink from '../components/post-link';
 
 const StyledHeader = styled.header`
@@ -53,7 +54,10 @@ const BlogPage = ({ location, data }) => {
                 <span className="description">{frontmatter.description}</span>
               )}
             </span>
-            <span className="meta">{frontmatter.date}</span>
+            <span className="meta">
+              <CategoryTag category={frontmatter.category} />
+              {frontmatter.date}
+            </span>
           </li>
         ))}
       </StyledPosts>
@@ -82,6 +86,7 @@ export const pageQuery = graphql`
             date(formatString: "MMM D, YYYY")
             slug
             external
+            category
           }
         }
       }

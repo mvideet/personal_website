@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useStaticQuery, graphql } from 'gatsby';
 import { Section, RowList } from '../list';
+import CategoryTag from '../category-tag';
 import PostLink from '../post-link';
 
 const Blog = () => {
@@ -18,6 +19,7 @@ const Blog = () => {
               date(formatString: "MMM YYYY")
               slug
               external
+              category
             }
           }
         }
@@ -34,7 +36,10 @@ const Blog = () => {
             <span className="primary">
               <PostLink {...frontmatter} />
             </span>
-            <span className="meta">{frontmatter.date}</span>
+            <span className="meta">
+              <CategoryTag category={frontmatter.category} />
+              {frontmatter.date}
+            </span>
           </li>
         ))}
       </RowList>
