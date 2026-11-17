@@ -1,21 +1,13 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import styled from 'styled-components';
-import { Layout, Intro, Jobs, Featured, Blog, Contact } from '@components';
-
-const StyledMainContainer = styled.main`
-  counter-reset: section;
-`;
+import { Layout, Intro, Blog, Jobs, Featured } from '@components';
 
 const IndexPage = ({ location }) => (
   <Layout location={location}>
-    <StyledMainContainer className="fillHeight">
-      <Intro />
-      <Jobs />
-      <Featured />
-      <Blog />
-      <Contact />
-    </StyledMainContainer>
+    <Intro />
+    <Blog />
+    <Jobs />
+    <Featured />
   </Layout>
 );
 

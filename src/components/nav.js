@@ -1,215 +1,69 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Link } from 'gatsby';
 import PropTypes from 'prop-types';
-import { motion } from 'framer-motion';
-import styled, { css } from 'styled-components';
-import { navLinks } from '@config';
-import { useScrollDirection, usePrefersReducedMotion } from '@hooks';
-import { Menu } from '@components';
-import ThemeToggle from './theme-toggle';
-import { IconLogo } from '@components/icons';
+import styled from 'styled-components';
 
-const StyledHeader = styled(motion.header)`
-  ${({ theme }) => theme.mixins.flexBetween};
-  position: fixed;
-  top: 0;
-  z-index: 11;
-  padding: 0px 50px;
-  width: 100%;
-  height: var(--nav-height);
-  background-color: color-mix(in oklab, var(--navy) 85%, transparent);
-  backdrop-filter: blur(10px);
-  transition: var(--transition);
-
-  @media (max-width: 1080px) {
-    padding: 0 40px;
-  }
-  @media (max-width: 768px) {
-    padding: 0 25px;
-  }
-
-  @media (prefers-reduced-motion: no-preference) {
-    ${props =>
-    props.scrollDirection === 'up' &&
-      !props.scrolledToTop &&
-      css`
-        height: var(--nav-scroll-height);
-        transform: translateY(0px);
-        background-color: color-mix(in oklab, var(--navy) 85%, transparent);
-        box-shadow: 0 10px 30px -10px var(--navy-shadow);
-      `};
-
-    ${props =>
-    props.scrollDirection === 'down' &&
-      !props.scrolledToTop &&
-      css`
-        height: var(--nav-scroll-height);
-        transform: translateY(calc(var(--nav-scroll-height) * -1));
-        box-shadow: 0 10px 30px -10px var(--navy-shadow);
-      `};
-  }
-`;
-
-const StyledNav = styled.nav`
-  ${({ theme }) => theme.mixins.flexBetween};
-  position: relative;
-  width: 100%;
-  color: var(--lightest-slate);
-  font-family: var(--font-mono);
-  counter-reset: item 0;
-  z-index: 12;
-
-  .logo {
-    ${({ theme }) => theme.mixins.flexCenter};
-
-    a {
-      color: var(--primary);
-      width: 42px;
-      height: 42px;
-      position: relative;
-      z-index: 1;
-
-      &:hover,
-      &:focus {
-        outline: 0;
-        svg {
-          fill: var(--primary-tint);
-        }
-      }
-
-      svg {
-        fill: none;
-        transition: var(--transition);
-        user-select: none;
-      }
-    }
-  }
-`;
-
-const StyledLinks = styled.div`
+const StyledNav = styled.header`
   display: flex;
   align-items: center;
+  justify-content: space-between;
+  padding: 48px 0 56px;
 
-  @media (max-width: 768px) {
-    display: none;
+  @media (max-width: 480px) {
+    padding: 32px 0 40px;
   }
 
-  ol {
-    ${({ theme }) => theme.mixins.flexBetween};
-    padding: 0;
+  a {
+    text-decoration: none;
+  }
+
+  .name {
+    font-weight: 600;
+  }
+
+  ul {
+    display: flex;
+    gap: 20px;
     margin: 0;
+    padding: 0;
     list-style: none;
 
-    li {
-      margin: 0 5px;
-      position: relative;
-      counter-increment: item 1;
-      font-size: var(--fz-sm);
+    a {
+      color: var(--muted);
 
-      a {
-        padding: 10px;
-
-        &:before {
-          content: '0' counter(item) '.';
-          margin-right: 5px;
-          color: var(--primary);
-          font-size: var(--fz-xs);
-          text-align: right;
-        }
+      &:hover,
+      &[aria-current='page'] {
+        color: var(--fg);
       }
     }
   }
 `;
 
-const Nav = ({ isHome }) => {
-  const [isMounted, setIsMounted] = useState(!isHome);
-  const scrollDirection = useScrollDirection('down');
-  const [scrolledToTop, setScrolledToTop] = useState(true);
-  const prefersReducedMotion = usePrefersReducedMotion();
+const links = [
+  { name: 'home', url: '/' },
+  { name: 'writing', url: '/blog' },
+];
 
-  const handleScroll = () => {
-    setScrolledToTop(window.pageYOffset < 50);
-  };
-
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      setIsMounted(true);
-    }, 100);
-
-    window.addEventListener('scroll', handleScroll);
-
-    return () => {
-      clearTimeout(timeout);
-      window.removeEventListener('scroll', handleScroll);
-    };
-  }, []);
-
-  const logo = (
-    <div className="logo">
-      <Link to="/" aria-label="home">
-        <IconLogo />
+const Nav = ({ isHome }) => (
+  <StyledNav>
+    {isHome ? (
+      <span />
+    ) : (
+      <Link className="name" to="/">
+        Videet Mehta
       </Link>
-    </div>
-  );
-
-  if (prefersReducedMotion) {
-    return (
-      <StyledHeader scrollDirection={scrollDirection} scrolledToTop={scrolledToTop}>
-        <StyledNav>
-          {logo}
-          <StyledLinks>
-            <ol>
-              {navLinks.map(({ url, name }, i) => (
-                <li key={i}>
-                  <Link to={url}>{name}</Link>
-                </li>
-              ))}
-            </ol>
-          </StyledLinks>
-          <Menu />
-        </StyledNav>
-      </StyledHeader>
-    );
-  }
-
-  const headerVariants = {
-    hidden: { y: -100, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { delay: 0.1, duration: 0.3 } },
-  };
-
-  const navItemVariants = {
-    hidden: { y: -20, opacity: 0 },
-    visible: { y: 0, opacity: 1 },
-  };
-
-  return (
-    <StyledHeader
-      initial="hidden"
-      animate={isMounted ? 'visible' : 'hidden'}
-      variants={headerVariants}
-      scrollDirection={scrollDirection}
-      scrolledToTop={scrolledToTop}>
-      <StyledNav>
-        <motion.div variants={navItemVariants}>{logo}</motion.div>
-
-        <StyledLinks>
-          <ol>
-            {navLinks.map(({ url, name }, i) => (
-              <motion.li key={i} variants={navItemVariants} transition={{ delay: i * 0.1 + 0.3 }}>
-                <Link to={url}>{name}</Link>
-              </motion.li>
-            ))}
-          </ol>
-        </StyledLinks>
-
-        <motion.div variants={navItemVariants} style={{ display: 'flex', gap: 10 }}>
-          <ThemeToggle />
-          <Menu />
-        </motion.div>
-      </StyledNav>
-    </StyledHeader>
-  );
-};
+    )}
+    <nav>
+      <ul>
+        {links.map(({ name, url }) => (
+          <li key={name}>
+            <Link to={url}>{name}</Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </StyledNav>
+);
 
 Nav.propTypes = {
   isHome: PropTypes.bool,

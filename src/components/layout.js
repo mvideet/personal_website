@@ -1,50 +1,43 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import PropTypes from 'prop-types';
 import styled, { ThemeProvider } from 'styled-components';
-import { Head, Loader, Nav, Social, Email, Footer } from '@components';
+import { Head, Nav, Footer } from '@components';
 import { GlobalStyle, theme } from '@styles';
 
 const StyledContent = styled.div`
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  max-width: calc(var(--content-width) + 48px);
+  margin: 0 auto;
+  padding: 0 24px;
+
+  @media (max-width: 480px) {
+    padding: 0 16px;
+  }
+
+  #content {
+    flex: 1;
+  }
 `;
 
 const Layout = ({ children, location }) => {
-  const isHome = location.pathname === '/';
-  const [isLoading, setIsLoading] = useState(false);
-
-  // Sets target="_blank" rel="noopener noreferrer" on external links
-  const handleExternalLinks = () => {
-    const allLinks = Array.from(document.querySelectorAll('a'));
-    if (allLinks.length > 0) {
-      allLinks.forEach(link => {
-        if (link.host !== window.location.host) {
-          link.setAttribute('rel', 'noopener noreferrer');
-          link.setAttribute('target', '_blank');
-        }
-      });
-    }
-  };
-
   useEffect(() => {
-    if (isLoading) {
-      return;
-    }
+    // Open external links in a new tab
+    Array.from(document.querySelectorAll('a')).forEach(link => {
+      if (link.host && link.host !== window.location.host) {
+        link.setAttribute('rel', 'noopener noreferrer');
+        link.setAttribute('target', '_blank');
+      }
+    });
 
     if (location.hash) {
-      const id = location.hash.substring(1); // location.hash without the '#'
-      setTimeout(() => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.scrollIntoView();
-          el.focus();
-        }
-      }, 0);
+      const el = document.getElementById(location.hash.substring(1));
+      if (el) {
+        el.scrollIntoView();
+      }
     }
-
-    handleExternalLinks();
-  }, [isLoading]);
+  }, [location.pathname]);
 
   return (
     <>
@@ -55,23 +48,14 @@ const Layout = ({ children, location }) => {
           <GlobalStyle />
 
           <a className="skip-to-content" href="#content">
-            Skip to Content
+            Skip to content
           </a>
 
-          {isLoading && isHome ? (
-            <Loader finishLoading={() => setIsLoading(false)} />
-          ) : (
-            <StyledContent>
-              <Nav isHome={isHome} />
-              <Social isHome={isHome} />
-              <Email isHome={isHome} />
-
-              <div id="content">
-                {children}
-                <Footer />
-              </div>
-            </StyledContent>
-          )}
+          <StyledContent>
+            <Nav isHome={location.pathname === '/'} />
+            <main id="content">{children}</main>
+            <Footer />
+          </StyledContent>
         </ThemeProvider>
       </div>
     </>

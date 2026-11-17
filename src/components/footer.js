@@ -1,68 +1,52 @@
-import React, { useRef } from 'react';
+import React from 'react';
 import styled from 'styled-components';
-import { motion, useInView } from 'framer-motion';
-import { Icon } from '@components/icons';
-import { socialMedia } from '@config';
+import { email, socialMedia } from '@config';
 
-const StyledFooter = styled(motion.footer)`
-  ${({ theme }) => theme.mixins.flexCenter};
-  flex-direction: column;
-  height: auto;
-  min-height: 70px;
-  padding: 15px;
-  text-align: center;
-`;
-
-const StyledSocialLinks = styled.div`
-  display: block;
-  width: 100%;
-  max-width: 270px;
-  margin: 0 auto 10px;
-  color: var(--light-slate);
+const StyledFooter = styled.footer`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 80px;
+  padding: 24px 0 48px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: var(--fz-sm);
 
   ul {
-    ${({ theme }) => theme.mixins.flexBetween};
-    padding: 0;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
     margin: 0;
+    padding: 0;
     list-style: none;
+  }
 
-    a {
-      padding: 10px;
-      &:hover {
-        color: var(--primary);
-      }
-      svg {
-        width: 20px;
-        height: 20px;
-      }
+  a {
+    text-decoration: none;
+
+    &:hover {
+      color: var(--fg);
     }
   }
 `;
 
-const Footer = () => {
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true });
-
-  return (
-    <StyledFooter
-      ref={ref}
-      initial={{ opacity: 0 }}
-      animate={isInView ? { opacity: 1 } : {}}
-      transition={{ duration: 0.5 }}>
-      <StyledSocialLinks>
-        <ul>
-          {socialMedia &&
-            socialMedia.map(({ name, url }, i) => (
-              <li key={i}>
-                <a href={url} aria-label={name} target="_blank" rel="noopener noreferrer">
-                  <Icon name={name} />
-                </a>
-              </li>
-            ))}
-        </ul>
-      </StyledSocialLinks>
-    </StyledFooter>
-  );
-};
+const Footer = () => (
+  <StyledFooter>
+    <span>© {new Date().getFullYear()} Videet Mehta</span>
+    <ul>
+      {socialMedia
+        .filter(({ name }) => name !== 'Instagram')
+        .map(({ name, url }) => (
+          <li key={name}>
+            <a href={url}>{name === 'Twitter' ? 'X' : name}</a>
+          </li>
+        ))}
+      <li>
+        <a href={`mailto:${email}`}>Email</a>
+      </li>
+    </ul>
+  </StyledFooter>
+);
 
 export default Footer;

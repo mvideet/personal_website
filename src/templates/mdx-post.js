@@ -6,69 +6,36 @@ import { Helmet } from 'react-helmet';
 import styled from 'styled-components';
 import { Layout } from '@components';
 
-const StyledPostContainer = styled.main`
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 200px 150px;
-
-  @media (max-width: 1080px) {
-    padding: 200px 100px;
-  }
-  @media (max-width: 768px) {
-    padding: 150px 50px;
-  }
-  @media (max-width: 480px) {
-    padding: 125px 25px;
-  }
-`;
-
 const StyledPostHeader = styled.header`
-  margin-bottom: 50px;
+  margin-bottom: 40px;
 
-  .breadcrumb {
-    color: var(--primary);
-    font-family: var(--font-mono);
+  .back {
+    display: inline-block;
+    margin-bottom: 32px;
+    color: var(--muted);
     font-size: var(--fz-sm);
+    text-decoration: none;
 
-    .arrow {
-      margin-right: 10px;
-    }
-
-    a {
-      ${({ theme }) => theme.mixins.inlineLink};
-      color: var(--primary);
+    &:hover {
+      color: var(--fg);
     }
   }
 
   h1 {
-    font-size: clamp(40px, 8vw, 60px);
-    margin: 40px 0 20px;
-    color: var(--lightest-slate);
+    margin-bottom: 8px;
+    font-size: var(--fz-heading);
+    letter-spacing: -0.02em;
   }
 
-  .subtitle {
-    color: var(--light-slate);
-    font-family: var(--font-mono);
-    font-size: var(--fz-md);
+  .meta {
     margin: 0;
-
-    time {
-      color: var(--lightest-slate);
-    }
-  }
-
-  .tag {
-    margin-right: 10px;
-    color: var(--primary);
-
-    &:hover {
-      color: var(--primary-tint);
-    }
+    color: var(--muted);
+    font-size: var(--fz-sm);
   }
 `;
 
-const StyledPostContent = styled.div`
-  margin-bottom: 100px;
+const StyledPostContent = styled.article`
+  line-height: 1.75;
 
   h1,
   h2,
@@ -76,39 +43,25 @@ const StyledPostContent = styled.div`
   h4,
   h5,
   h6 {
-    margin: 2em 0 1em;
-    color: var(--lightest-slate);
+    margin: 40px 0 12px;
   }
 
-  p {
-    margin: 1em 0;
-    line-height: 1.5;
-    color: var(--light-slate);
+  h1 {
+    font-size: var(--fz-xxl);
   }
 
-  a {
-    ${({ theme }) => theme.mixins.inlineLink};
+  h2 {
+    font-size: var(--fz-xl);
   }
 
-  code {
-    background-color: var(--lightest-navy);
-    color: var(--lightest-slate);
-    border-radius: var(--border-radius);
-    font-size: var(--fz-sm);
-    padding: 0.2em 0.4em;
+  h3 {
+    font-size: var(--fz-lg);
   }
 
-  pre code {
-    background-color: transparent;
-    padding: 0;
-  }
-
-  blockquote {
-    border-left: 3px solid var(--primary);
-    padding-left: 20px;
-    margin: 2em 0;
-    font-style: italic;
-    color: var(--light-slate);
+  p,
+  ul,
+  ol {
+    margin: 0 0 20px;
   }
 
   ul,
@@ -116,30 +69,49 @@ const StyledPostContent = styled.div`
     padding-left: 20px;
 
     li {
-      margin: 0.5em 0;
-      color: var(--light-slate);
+      margin: 6px 0;
     }
   }
 
-  /* KaTeX math styling */
+  img {
+    border-radius: var(--border-radius);
+  }
+
+  :not(pre) > code {
+    padding: 0.15em 0.35em;
+    border-radius: 4px;
+    background-color: var(--surface);
+  }
+
+  table {
+    width: 100%;
+    margin: 24px 0;
+    border-collapse: collapse;
+    font-size: var(--fz-sm);
+
+    th,
+    td {
+      padding: 8px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+    }
+  }
+
   .katex {
-    font-size: 1.1em;
+    font-size: 1.05em;
   }
 
   .katex-display {
-    margin: 1.5em 0;
-    text-align: center;
-  }
-
-  .katex-display .katex {
-    text-align: center;
+    margin: 24px 0;
+    overflow-x: auto;
+    overflow-y: hidden;
   }
 `;
 
 const StyledComments = styled.section`
-  margin-top: 40px;
-  padding-top: 20px;
-  border-top: 1px solid var(--lightest-navy);
+  margin-top: 56px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
 `;
 
 const Comments = () => {
@@ -147,8 +119,12 @@ const Comments = () => {
 
   useEffect(() => {
     // Only run on the client and only if not already injected
-    if (!containerRef.current) {return;}
-    if (containerRef.current.hasChildNodes()) {return;}
+    if (!containerRef.current) {
+      return;
+    }
+    if (containerRef.current.hasChildNodes()) {
+      return;
+    }
 
     const {
       GATSBY_GISCUS_REPO,
@@ -187,47 +163,34 @@ const Comments = () => {
 
 const MdxPostTemplate = ({ data, location }) => {
   const { frontmatter, body } = data.mdx;
-  const { title, date, tags } = frontmatter;
+  const { title, date } = frontmatter;
 
   return (
     <Layout location={location}>
       <Helmet title={title} />
 
-      <StyledPostContainer>
-        <span className="breadcrumb">
-          <span className="arrow">&larr;</span>
-          <Link to="/blog">All posts</Link>
-        </span>
+      <StyledPostHeader>
+        <Link className="back" to="/blog">
+          ← All writing
+        </Link>
+        <h1>{title}</h1>
+        <p className="meta">
+          <time>
+            {new Date(date).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+              timeZone: 'UTC',
+            })}
+          </time>
+        </p>
+      </StyledPostHeader>
 
-        <StyledPostHeader>
-          <h1>{title}</h1>
-          <p className="subtitle">
-            <time>
-              {new Date(date).toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric',
-              })}
-            </time>
-            {tags && tags.length > 0 && (
-              <>
-                <span>&nbsp;&mdash;&nbsp;</span>
-                {tags.map((tag, i) => (
-                  <span key={i} className="tag">
-                    #{tag}
-                  </span>
-                ))}
-              </>
-            )}
-          </p>
-        </StyledPostHeader>
+      <StyledPostContent>
+        <MDXRenderer>{body}</MDXRenderer>
+      </StyledPostContent>
 
-        <StyledPostContent>
-          <MDXRenderer>{body}</MDXRenderer>
-        </StyledPostContent>
-
-        <Comments />
-      </StyledPostContainer>
+      <Comments />
     </Layout>
   );
 };
