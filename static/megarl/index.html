@@ -158,6 +158,7 @@ footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
 
 <h2 id="train">6. What gets trained, and why the replay is exact</h2>
 <p>We train <strong>all of layer 13</strong>, one of the model's 24 transformer layers: its attention and MLP weights, 14,946,304 parameters in all.</p>
+<p>Why one layer, and why this one? <a href="https://arxiv.org/abs/2607.01232">Is One Layer Enough?</a> (Zhang et al., 2026) found that training a single transformer layer can recover most of the gains of full-parameter RL training, and that the layers contributing the most sit in the middle of the stack. Layer 13 is in the middle of the model's 24.</p>
 <p>The trained layer is used from the last prompt token onward, while the prompt itself always goes through the original weights. So each question's KV cache is computed once at setup and reused by every version of the model. While generating, the engines save the hidden state entering layer 13 for every token. The learner starts from those saved states (layers 0 to 12 never change), replays layers 13 to 23 with exactly the same arithmetic the engines used, and backpropagates from layer 23 down to 13. Because the replay matches, the learner's log-probabilities equal the generation-time ones bit for bit when the weights have not changed, so any difference it sees is real policy change, not numerical noise.</p>
 <p>Each update clips the gradient to norm 1.0, applies AdamW on full-precision master weights, and publishes a 29.9 MB bf16 snapshot of the new layer for the engines to use. In the race, an update took about 65 ms of computing plus about 37 ms of waiting for a complete batch, time the learner's blocks spent helping generate.</p>
 
@@ -228,7 +229,7 @@ footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
 <h2 id="limits">10. What we don't claim</h2>
 <ul>
 <li><strong>Scale.</strong> One H100, a 0.5B-parameter model, answers of at most 64 tokens, multiple-choice tasks, and one seed per system. Bigger models, long reasoning chains and multiple GPUs are untested.</li>
-<li><strong>One trained layer.</strong> We train all of layer 13 (14.9M parameters), not the whole model.</li>
+<li><strong>One trained layer.</strong> We train all of layer 13 (14.9M parameters), not the whole model. Prior work suggests one middle layer recovers most of full RL's gains, but we did not compare against full-model training here.</li>
 <li><strong>Accuracy is a tie.</strong> Final accuracy is within noise across the three systems; the claim is time, not a better final model.</li>
 <li><strong>Setup excluded.</strong> All rates count training time only, for every system.</li>
 <li><strong>Separate staleness experiment.</strong> The lag 0 against lag 8 comparison is a pair of two-task runs, each configured for its lag, not the race configuration.</li>
