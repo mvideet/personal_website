@@ -90,7 +90,6 @@ footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
 <li><a href="#fed">Keeping four tasks fed</a></li>
 <li><a href="#race">The race</a></li>
 <li><a href="#limits">What we don't claim</a></li>
-<li><a href="#next">What's next</a></li>
 </ol>
 </details>
 
@@ -235,9 +234,6 @@ footer { margin-top: 60px; padding-top: 18px; border-top: 1px solid var(--line);
 <li><strong>Separate staleness experiment.</strong> The lag 0 against lag 8 comparison is a pair of two-task runs, each configured for its lag, not the race configuration.</li>
 <li><strong>Slightly off-policy.</strong> Training on answers up to 8 updates old changes the algorithm a little. The clipped ratio kept it stable here; longer runs may need a tighter limit.</li>
 </ul>
-
-<h2 id="next">11. What's next</h2>
-<p>The natural next steps are training more of the model, longer answers with free-form graders, and larger models, which raise the question of how a kernel like this spans several GPUs. The broader lesson seems general, though: when a workload is many small, dependent pieces of work, letting the GPU schedule itself, instead of being told what to do one kernel at a time, can be worth an order of magnitude.</p>
 
 <h2 id="ack">Acknowledgements</h2>
 <p class="ack">Thanks to Flapping Airplanes for the demo that started this, and to Jerry Zhu and Arnold Xu for <a href="https://github.com/Bobliuuu/open-flapping-airplanes">open-flapping-airplanes</a>, whose open persistent-kernel design MegaRL's scheduler builds on. Thanks to the Qwen team for Qwen2.5-0.5B-Instruct; to the authors of ARC, SciQ and CommonsenseQA; to the DeepSeekMath authors for GRPO; and to Hugging Face for transformers and TRL, whose GRPO implementation we checked our loss against.</p>
