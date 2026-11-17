@@ -1,5 +1,5 @@
 ---
-date: '2026-11-01'
+date: '2026-10-01'
 title: 'BabaBench: A Benchmark for Patient Advocacy Tasks'
 url: 'https://www.baba.com/bench/'
 tech:

@@ -28,11 +28,10 @@ const Intro = () => (
     </p>
     <p>
       Before that I was at <a href="https://www.together.ai/">Together AI</a>, where I trained
-      universal diffusion speculators at 70% of the training compute. I also pretrained audio
-      encoders for on-device deployment at <a href="https://www.liquid.ai/">Liquid AI</a>, forecast
-      marginal prices at <a href="https://mercuria.com">Mercuria Energy Trading</a>, and helped
-      build India's first Hindi–English conversational speech model at{' '}
-      <a href="https://sarvam.ai">Sarvam AI</a>.
+      universal diffusion speculators using 30% of the compute. I also pretrained audio encoders for
+      on-device deployment at <a href="https://www.liquid.ai/">Liquid AI</a>, forecast marginal
+      prices at <a href="https://mercuria.com">Mercuria Energy Trading</a>, and helped build India's
+      first Hindi–English conversational speech model at <a href="https://sarvam.ai">Sarvam AI</a>.
     </p>
     <p>
       In 2024 I represented the USA at the International Olympiad in Artificial Intelligence and won
