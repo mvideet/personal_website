@@ -23,8 +23,9 @@ const Intro = () => (
     <p>
       Right now I'm at <a href="https://hanlab.mit.edu/">HAN Lab</a>, using diffusion language
       models for speculative decoding, and at MIT's{' '}
-      <a href="https://sls.csail.mit.edu/">Spoken Language Systems Lab</a> working on test-time
-      training. This spring I'm joining <a href="https://inco.ai">Inco</a> as a research intern.
+      <a href="https://sls.csail.mit.edu/">Spoken Language Systems Lab</a> making full-duplex speech
+      models more efficient and expressive. This spring I'm joining{' '}
+      <a href="https://inco.ai">Inco</a> as a research intern.
     </p>
     <p>
       Before that I was at <a href="https://www.together.ai/">Together AI</a>, where I trained
