@@ -158,6 +158,7 @@ const Blog = () => {
               date
               tags
               slug
+              external
             }
           }
         }
@@ -180,7 +181,7 @@ const Blog = () => {
         {posts.length > 0 &&
           posts.map(({ node }, i) => {
             const { frontmatter } = node;
-            const { title, description, date, tags, slug } = frontmatter;
+            const { title, description, date, tags, slug, external } = frontmatter;
 
             return (
               <StyledPost
@@ -207,7 +208,7 @@ const Blog = () => {
                     </div>
 
                     <h3 className="post-title">
-                      <Link to={slug}>{title}</Link>
+                      {external ? <a href={slug}>{title}</a> : <Link to={slug}>{title}</Link>}
                     </h3>
                   </header>
 

@@ -172,7 +172,7 @@ const BlogPage = ({ location, data }) => {
           {posts.length > 0 &&
             posts.map(({ node }, i) => {
               const { frontmatter } = node;
-              const { title, description, slug, date, tags } = frontmatter;
+              const { title, description, slug, date, tags, external } = frontmatter;
               return (
                 <StyledPost key={i}>
                   <div className="post-inner">
@@ -194,7 +194,7 @@ const BlogPage = ({ location, data }) => {
                       </div>
 
                       <h3 className="post-title">
-                        <Link to={slug}>{title}</Link>
+                        {external ? <a href={slug}>{title}</a> : <Link to={slug}>{title}</Link>}
                       </h3>
 
                       <div className="post-desc">{description}</div>
@@ -247,6 +247,7 @@ export const pageQuery = graphql`
             date
             tags
             slug
+            external
           }
         }
       }

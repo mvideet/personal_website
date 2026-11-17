@@ -23,6 +23,7 @@ exports.createSchemaCustomization = ({ actions }) => {
       date: Date @dateformat
       tags: [String]
       slug: String
+      external: Boolean
     }
   `;
   createTypes(typeDefs);
@@ -43,6 +44,7 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
           node {
             frontmatter {
               slug
+              external
             }
           }
         }
@@ -60,7 +62,10 @@ exports.createPages = async ({ graphql, actions, reporter }) => {
   const mdxPostTemplate = path.resolve('./src/templates/mdx-post.js');
 
   posts.forEach(({ node }) => {
-    const { slug } = node.frontmatter;
+    const { slug, external } = node.frontmatter;
+    if (external) {
+      return;
+    }
     createPage({
       path: slug,
       component: mdxPostTemplate,
