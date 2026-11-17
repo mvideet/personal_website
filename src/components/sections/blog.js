@@ -38,7 +38,7 @@ const Blog = () => {
             </span>
             <span className="meta">
               <CategoryTag category={frontmatter.category} />
-              {frontmatter.date}
+              <span className="date">{frontmatter.date}</span>
             </span>
           </li>
         ))}

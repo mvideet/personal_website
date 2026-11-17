@@ -65,5 +65,16 @@ export const RowList = styled.ul`
     color: var(--muted);
     font-size: var(--fz-sm);
     font-variant-numeric: tabular-nums;
+
+    .date {
+      display: inline-block;
+      min-width: 6.5em;
+      text-align: right;
+
+      @media (max-width: 480px) {
+        min-width: 0;
+        text-align: left;
+      }
+    }
   }
 `;
