@@ -3,7 +3,7 @@ date: '2025-09-10'
 title: 'AI Researcher'
 company: 'H.A.N Lab'
 location: 'MIT'
-range: 'Sep. 2025 - Present'
+range: 'Sep. 2025 - June 2026'
 url: 'https://hanlab.mit.edu/'
 ---
 
